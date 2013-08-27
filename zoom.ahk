@@ -55,13 +55,13 @@ ADHD.gui_add("Edit", "BasicX", "xp+50 yp W40", "", 0)
 ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
 ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "36ADF5")
 ADHD.gui_add("Edit", "BasicTol", "xp+60 yp W40", "", 10)
-Gui, Add, Edit, xp+50 yp W50
-Gui, Add, Text, xp+60 yp W40 center, OK
+Gui, Add, Edit, xp+50 yp W50 vBasicCurrent
+Gui, Add, Text, xp+60 yp W40 center vBasicState,
 
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
 
-Gui, Add, CheckBox, x5 yp+25 vCalibrationMode gcalib_mode_changed, Calibration Mode
-CalibrationMode_TT := "Use this mode to help you find correct values"
+Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
+CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when playing to save CPU time"
 ; End GUI creation section
 ; ============================================================================================
 
@@ -76,10 +76,23 @@ ZoomOut:
 	do_zoom(0)
 	return
 
-calib_mode_changed:
-	soundbeep
+CalibModeChanged:	
+	calib_mode_changed()
 	return
 
+CalibModeTimer:
+	if WinActive("ahk_class CryENGINE"){
+		PixelGetColor, col, BasicX, BasicY
+		StringSplit, col, col, x
+		GuiControl,,BasicCurrent, %col2%
+		state := pixel_check(BasicX,BasicY,BasicCol,BasicTol)
+		if (state){
+			GuiControl,,BasicState, OK
+		} else {
+			GuiControl,,BasicState, NO
+		}
+	}
+	return
 
 do_zoom(dir){
 	Global zooming
@@ -172,6 +185,20 @@ option_changed_hook(){
 	global ADHD
 	
 	set_always_on_top()
+	calib_mode_changed()
+}
+
+calib_mode_changed(){
+	global CalibMode
+	gui, submit, nohide
+	
+	if (CalibMode){
+		SetTimer, CalibModeTimer, 100
+	} else {
+		SetTimer, CalibModeTimer, Off
+		GuiControl,,BasicState,
+
+	}
 }
 
 set_always_on_top(){
@@ -182,27 +209,6 @@ set_always_on_top(){
 	} else {
 		Gui,-AlwaysOnTop
 	}
-}
-
-AscToHex(Inp,UC = 0)
-{
-	OldFmt = %A_FormatInteger%
-	SetFormat, Integer, hex
-
-	Loop, Parse, Inp
-	{
-		TransForm, Asc, Asc, %A_LoopField%
-		Asc += 0
-		StringTrimLeft, Hex, Asc, 2
-		IfEqual, UC, 0
-			Result = %Result%%Hex%
-		Else
-			Result = %Result%%Hex%00
-	}
-	SetFormat, Integer, %OldFmt%
-	StringUpper, Result, Result
-
-	Return Result
 }
 
 ; KEEP THIS AT THE END!!
