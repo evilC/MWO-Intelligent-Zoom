@@ -58,6 +58,22 @@ ADHD.gui_add("Edit", "BasicTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vBasicCurrent
 Gui, Add, Text, xp+60 yp W40 center vBasicState,
 
+Gui, Add, Text, x5 yp+25, 1.5
+ADHD.gui_add("Edit", "FiveX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", "36ADF5")
+ADHD.gui_add("Edit", "FiveTol", "xp+60 yp W40", "", 10)
+Gui, Add, Edit, xp+50 yp W50 vFiveCurrent
+Gui, Add, Text, xp+60 yp W40 center vFiveState,
+
+Gui, Add, Text, x5 yp+25, 3.0
+ADHD.gui_add("Edit", "ThreeX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", "36ADF5")
+ADHD.gui_add("Edit", "ThreeTol", "xp+60 yp W40", "", 10)
+Gui, Add, Edit, xp+50 yp W50 vThreeCurrent
+Gui, Add, Text, xp+60 yp W40 center vThreeState,
+
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
 
 Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
@@ -153,13 +169,23 @@ mult_visible(){
 ; Detects between 1.5x and 1.0x
 ; 1920x1200 = 1314,837
 is_5(){
-	return (pixel_check(1314,837,"36ADF5",10))
+	global FiveX
+	global FiveY
+	global FiveCol
+	global FiveTol
+	
+	return (pixel_check(FiveX,FiveY,FiveCol,FiveTol))
 }
 
 ; Detects if 3.0
 ; 1920x1200 = 1305,835
 is_3(){
-	return (pixel_check(1305,835,"36ADF5",10))
+	global ThreeX
+	global ThreeY
+	global ThreeCol
+	global ThreeTol
+	
+	return (pixel_check(ThreeX,ThreeY,ThreeCol,ThreeTol))
 }
 
 ; Default colour is 0x36adf5
@@ -197,6 +223,8 @@ calib_mode_changed(){
 	} else {
 		SetTimer, CalibModeTimer, Off
 		GuiControl,,BasicState,
+		GuiControl,,FiveState,
+		GuiControl,,ThreeState,
 
 	}
 }
