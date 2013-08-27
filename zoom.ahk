@@ -88,6 +88,8 @@ CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when pl
 
 ADHD.finish_startup()
 
+return
+
 ZoomIn:
 	do_zoom(1)
 	return
@@ -165,6 +167,9 @@ do_zoom(dir){
 				}
 			}
 		}
+	} else {
+		soundbeep, 100, 100
+		soundbeep, 100, 100
 	}
 	sleep, 100
 	zooming := 0
