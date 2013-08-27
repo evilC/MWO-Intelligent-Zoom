@@ -1,3 +1,5 @@
+MWO Intelligent Zoom changelog
+
 Key:
 ! : Warning
 * : Comment
