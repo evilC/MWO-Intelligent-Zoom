@@ -4,6 +4,7 @@
 ADHD := New ADHDLib
 
 zooming := 0
+calib_list := Array("Basic","Five","Three")
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -74,6 +75,9 @@ ADHD.gui_add("Edit", "ThreeTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vThreeCurrent
 Gui, Add, Text, xp+60 yp W40 center vThreeState,
 
+Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
+Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
+
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
 
 Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
@@ -98,14 +102,41 @@ CalibModeChanged:
 
 CalibModeTimer:
 	if WinActive("ahk_class CryENGINE"){
-		PixelGetColor, col, BasicX, BasicY
-		StringSplit, col, col, x
-		GuiControl,,BasicCurrent, %col2%
-		state := pixel_check(BasicX,BasicY,BasicCol,BasicTol)
-		if (state){
-			GuiControl,,BasicState, OK
-		} else {
-			GuiControl,,BasicState, NO
+		Loop, % calib_list.MaxIndex()
+		{
+			tmpx := calib_list[A_Index] "X"
+			tmpy := calib_list[A_Index] "Y"
+			tmpx := %tmpx%
+			tmpy := %tmpy%
+			PixelGetColor, col, %tmpx%, %tmpy%
+			StringSplit, col, col, x
+			ctrl := calib_list[A_Index] "Current"
+			GuiControl,,%ctrl%, %col2%
+
+			tol := calib_list[A_Index] "Tol"
+			tol := %tol%
+			
+			col := calib_list[A_Index] "Col"
+			col := %col%
+			
+			state := pixel_check(tmpx,tmpy,col,10)
+			ctrl := calib_list[A_Index] "State"
+			if (state){
+				GuiControl,,%ctrl%, YES
+			} else {
+				GuiControl,,%ctrl%, NO
+			}
+			
+			zoom := get_zoom()
+			
+			if (zoom == 0){
+				str := "Unknown"
+			} else {
+				str := zoom
+			}
+			GuiControl,, CurrentZoom, %str%
+
+			;get_zoom()
 		}
 	}
 	return
@@ -219,8 +250,12 @@ calib_mode_changed(){
 	gui, submit, nohide
 	
 	if (CalibMode){
+		Guicontrol, -hidden, DetZoomLab
+		Guicontrol, -hidden, CurrentZoom
 		SetTimer, CalibModeTimer, 100
 	} else {
+		Guicontrol, +hidden, DetZoomLab
+		Guicontrol, +hidden, CurrentZoom
 		SetTimer, CalibModeTimer, Off
 		GuiControl,,BasicState,
 		GuiControl,,FiveState,
