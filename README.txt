@@ -17,6 +17,8 @@ Tick "Program Mode" to change bindings.
 Also tick the "Limit Application" box on this screen to only take effect inside MWO
 Remember to untick "Program Mode" before trying to use the macro!
 
+The default settings should work for 1080p, so you may be able to skip the rest of the stages
+
 (You will need to repeat from this step if you change resolution)
 
 3) Set up MWO for calibration

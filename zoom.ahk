@@ -6,8 +6,11 @@ ADHD := New ADHDLib
 ; Ensure running as admin
 ADHD.run_as_admin()
 
+#MaxThreadsPerHotkey, 2
+
 ; Set up vars
 zooming := 0
+queued_zoom := 0
 calib_list := Array("Basic","Five","Three")
 default_colour := "F7AF36"
 
@@ -20,7 +23,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.2, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.4, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -65,8 +68,8 @@ Gui, Add, Text, xp+60 yp W50 center, 0-255
 
 
 Gui, Add, Text, x5 yp+25, Basic
-ADHD.gui_add("Edit", "BasicX", "xp+30 yp-3 W40", "", 0)
-ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "BasicX", "xp+30 yp-3 W40", "", 1322)
+ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 779)
 ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vBasicSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vBasicCurrent
@@ -75,8 +78,8 @@ ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
-ADHD.gui_add("Edit", "FiveX", "xp+30 yp-3 W40", "", 0)
-ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "FiveX", "xp+30 yp-3 W40", "", 1314)
+ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 777)
 ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFiveSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFiveCurrent
@@ -85,8 +88,8 @@ ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
-ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 0)
-ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 1305)
+ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 775)
 ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vThreeSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vThreeCurrent
@@ -99,6 +102,11 @@ Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
 
 Gui, Add, Text, x5 yp+25, MWO Zoom Key
 ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W40", "", "z")
+ZoomKey_TT := "The key bound to Zoom in MWO"
+
+Gui, Add, Text, xp+60 yp, Zoom repeat delay (ms)
+ADHD.gui_add("Edit", "ZoomDelay", "xp+120 yp-3 W40", "", 150)
+ZoomDelay_TT := "How long after zooming to wait before allowing another zoom`nIf you have a custom wide FOV, you may need to set this higher"
 
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+40", "Always On Top", 0)
 
@@ -175,9 +183,16 @@ CalibModeTimer:
 
 do_zoom(dir){
 	Global zooming
+	Global queued_zoom
 	Global ZoomKey
+	Global ZoomDelay
 	
 	if (zooming){
+		;soundbeep, 200, 200
+		; Allow two zoom ins to be queued
+		if (dir){
+			queued_zoom := 1
+		}
 		return
 	}
 	zooming := 1
@@ -203,10 +218,12 @@ do_zoom(dir){
 		;soundbeep, 100, 100
 		;soundbeep, 100, 100
 	}
-	if (dir == 0){
-		sleep, 50
-	}
+	sleep, %ZoomDelay%
 	zooming := 0
+	if (queued_zoom == 1){
+		queued_zoom := 0
+		do_zoom(1)
+	}
 }
 
 get_zoom(){

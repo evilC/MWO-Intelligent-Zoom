@@ -6,6 +6,16 @@ Key:
 = : Change / Fix
 + : Added feature
 
+1.4
++ Default settings should now work for 1080p (1920x1080)
++ Added "Zoom repeat delay" to help tune for wider FOVs, slower machines etc.
+
+1.3 27th Aug 2013
+= Much improved input handling
+  Now if you roll spam zoom in (ie roll the mouse wheel up multiple times) it will queue zoom ins nicely
+  ie two Wheel Ups in rapid succession should now reliably zoom in to full
+  Also issues with the script getting confused in cases like this seem to be improved
+
 1.2 27th Aug 2013
 = Messed with timings
 
