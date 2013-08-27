@@ -14,7 +14,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "Intelligent Zoom", version: 0.1, author: "evilC", link: "<a href=""http://evilc.com/proj/adhd"">ADHD Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 0.1, author: "evilC", link: "<a href=""http://evilc.com/proj/adhd"">ADHD Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -43,8 +43,25 @@ Gui, Tab, 1
 ; ============================================================================================
 ; GUI SECTION
 
+Gui, Add, Text, x50 yp+25 W50 center, X
+Gui, Add, Text, xp+50 yp W50 center, Y
+Gui, Add, Text, xp+55 yp W50 center, Colour
+Gui, Add, Text, xp+55 yp W50 center, Tol
+Gui, Add, Text, xp+55 yp W50 center, Current
+Gui, Add, Text, xp+55 yp W50 center, State
+
+Gui, Add, Text, x5 yp+25, Basic
+ADHD.gui_add("Edit", "BasicX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "36ADF5")
+ADHD.gui_add("Edit", "BasicTol", "xp+60 yp W40", "", 10)
+Gui, Add, Edit, xp+50 yp W50
+Gui, Add, Text, xp+60 yp W40 center, OK
+
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
 
+Gui, Add, CheckBox, x5 yp+25 vCalibrationMode gcalib_mode_changed, Calibration Mode
+CalibrationMode_TT := "Use this mode to help you find correct values"
 ; End GUI creation section
 ; ============================================================================================
 
@@ -58,6 +75,11 @@ ZoomIn:
 ZoomOut:
 	do_zoom(0)
 	return
+
+calib_mode_changed:
+	soundbeep
+	return
+
 
 do_zoom(dir){
 	Global zooming
