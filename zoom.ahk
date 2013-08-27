@@ -48,25 +48,35 @@ Gui, Tab, 1
 ; ============================================================================================
 ; GUI SECTION
 
-Gui, Add, Text, x50 yp+25 W50 center, X
+
+
+Gui, Add, Text, x30 yp+25 W100 center, Coordinates
+Gui, Add, Text, xp+110 yp W100 center, Colours
+Gui, Add, Text, xp+103 yp W100 center, Tolerance
+Gui, Add, Text, xp+90 yp W30 center, State
+
+Gui, Add, Text, x30 yp+25 W50 center, X
 Gui, Add, Text, xp+50 yp W50 center, Y
-Gui, Add, Text, xp+55 yp W50 center, Colour
-Gui, Add, Text, xp+55 yp W50 center, Tol
-Gui, Add, Text, xp+55 yp W50 center, Current
-Gui, Add, Text, xp+55 yp W50 center, State
+Gui, Add, Text, xp+65 yp W50 center, Target
+Gui, Add, Text, xp+65 yp W50 center, Current
+Gui, Add, Text, xp+60 yp W50 center, 0-255
+;Gui, Add, Text, xp+65 yp W30 center, Y/N
+
 
 Gui, Add, Text, x5 yp+25, Basic
-ADHD.gui_add("Edit", "BasicX", "xp+50 yp-3 W40", "", 0)
+ADHD.gui_add("Edit", "BasicX", "xp+30 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "36ADF5")
-ADHD.gui_add("Edit", "BasicTol", "xp+60 yp W40", "", 10)
-Gui, Add, Edit, xp+50 yp W50 vBasicCurrent
-Gui, Add, Text, xp+60 yp+3 W40 center vBasicState,
+ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "F7AF36")
+Gui, Add, Text, xp+50 yp W20 center vBasicSetCol, ■
+Gui, Add, Edit, xp+20 yp W50 vBasicCurrent
+Gui, Add, Text, xp+50 yp W20 center vBasicCurrentCol,
+ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", 10)
+Gui, Add, Text, xp+50 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
 ADHD.gui_add("Edit", "FiveX", "xp+50 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", "36ADF5")
+ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", "F7AF36")
 ADHD.gui_add("Edit", "FiveTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vFiveCurrent
 Gui, Add, Text, xp+60 yp+3 W40 center vFiveState,
@@ -74,7 +84,7 @@ Gui, Add, Text, xp+60 yp+3 W40 center vFiveState,
 Gui, Add, Text, x5 yp+25, 3.0
 ADHD.gui_add("Edit", "ThreeX", "xp+50 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", "36ADF5")
+ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", "F7AF36")
 ADHD.gui_add("Edit", "ThreeTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vThreeCurrent
 Gui, Add, Text, xp+60 yp+3 W40 center vThreeState,
@@ -111,17 +121,25 @@ CalibModeChanged:
 
 CalibModeTimer:
 	if WinActive("ahk_class CryENGINE"){
-		Loop, % calib_list.MaxIndex()
-		{
+		Loop, % calib_list.MaxIndex(){
 			tmpx := calib_list[A_Index] "X"
 			tmpy := calib_list[A_Index] "Y"
 			tmpx := %tmpx%
 			tmpy := %tmpy%
-			PixelGetColor, col, %tmpx%, %tmpy%
+			PixelGetColor, col, %tmpx%, %tmpy%, RGB
+			
 			StringSplit, col, col, x
+			col := col2
 			ctrl := calib_list[A_Index] "Current"
-			GuiControl,,%ctrl%, %col2%
+			GuiControl,,%ctrl%, %col%
 
+			; Set swatches
+			swatch := calib_list[A_Index] "CurrentCol"
+			tmp := "+c" col
+			GuiControl, %tmp%, %swatch%
+			GuiControl,, %swatch%, ■
+			
+			
 			tol := calib_list[A_Index] "Tol"
 			tol := %tol%
 			
@@ -233,10 +251,10 @@ is_3(){
 	return (pixel_check(ThreeX,ThreeY,ThreeCol,ThreeTol))
 }
 
-; Default colour is 0x36adf5
+; Default colour is 0xF7AF36
 pixel_check(x,y,col,tol){
 	col := "0x" col
-	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, %col% , %tol%, Fast
+	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, %col% , %tol%, Fast RGB
 	if Errorlevel {
 		return 0
 	} else {
@@ -254,7 +272,17 @@ app_inactive_hook(){
 
 option_changed_hook(){
 	global ADHD
+	global calib_list
 	
+	Loop, % calib_list.MaxIndex(){
+		swatch := calib_list[A_Index] "SetCol"
+		cont := calib_list[A_Index] "Col"
+		GuiControlGet, tmp,, %cont%
+		tmp := "+c" tmp
+		GuiControl, %tmp%, %swatch%
+		GuiControl,, %swatch%, ■
+	}
+			
 	set_always_on_top()
 	calib_mode_changed()
 }
