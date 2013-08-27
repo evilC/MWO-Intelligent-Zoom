@@ -3,6 +3,10 @@
 ; Create an instance of the library
 ADHD := New ADHDLib
 
+; Ensure running as admin
+ADHD.run_as_admin()
+
+; Set up vars
 zooming := 0
 calib_list := Array("Basic","Five","Three")
 
@@ -15,13 +19,13 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 0.1, author: "evilC", link: "<a href=""http://evilc.com/proj/adhd"">ADHD Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.0, author: "evilC", link: "<a href=""http://evilc.com/proj/adhd"">ADHD Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
 
 ; GUI size
-ADHD.config_size(375,335)
+ADHD.config_size(375,300)
 
 ; Defines your hotkeys 
 ; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
@@ -52,33 +56,36 @@ Gui, Add, Text, xp+55 yp W50 center, Current
 Gui, Add, Text, xp+55 yp W50 center, State
 
 Gui, Add, Text, x5 yp+25, Basic
-ADHD.gui_add("Edit", "BasicX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "BasicX", "xp+50 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
 ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "36ADF5")
 ADHD.gui_add("Edit", "BasicTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vBasicCurrent
-Gui, Add, Text, xp+60 yp W40 center vBasicState,
+Gui, Add, Text, xp+60 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
-ADHD.gui_add("Edit", "FiveX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "FiveX", "xp+50 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 0)
 ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", "36ADF5")
 ADHD.gui_add("Edit", "FiveTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vFiveCurrent
-Gui, Add, Text, xp+60 yp W40 center vFiveState,
+Gui, Add, Text, xp+60 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
-ADHD.gui_add("Edit", "ThreeX", "xp+50 yp W40", "", 0)
+ADHD.gui_add("Edit", "ThreeX", "xp+50 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 0)
 ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", "36ADF5")
 ADHD.gui_add("Edit", "ThreeTol", "xp+60 yp W40", "", 10)
 Gui, Add, Edit, xp+50 yp W50 vThreeCurrent
-Gui, Add, Text, xp+60 yp W40 center vThreeState,
+Gui, Add, Text, xp+60 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
 Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
 
-ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
+Gui, Add, Text, x5 yp+25, MWO Zoom Key
+ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W40", "", "z")
+
+ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+40", "Always On Top", 0)
 
 Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
 CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when playing to save CPU time"
@@ -145,6 +152,8 @@ CalibModeTimer:
 
 do_zoom(dir){
 	Global zooming
+	Global ZoomKey
+	
 	if (zooming){
 		return
 	}
@@ -161,9 +170,9 @@ do_zoom(dir){
 			; zoom out
 			if (zoom > 1){
 				if (zoom == 3.0){
-					Send {z}
+					Send {%ZoomKey%}
 				} else {
-					Send {z}{z}
+					Send {%ZoomKey%}{%ZoomKey%}
 				}
 			}
 		}
