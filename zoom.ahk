@@ -9,6 +9,7 @@ ADHD.run_as_admin()
 ; Set up vars
 zooming := 0
 calib_list := Array("Basic","Five","Three")
+default_colour := "F7AF36"
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -25,7 +26,7 @@ ADHD.config_about({name: "MWO Zoom", version: 1.0, author: "evilC", link: "<a hr
 ADHD.config_default_app("CryENGINE")
 
 ; GUI size
-ADHD.config_size(375,300)
+ADHD.config_size(375,310)
 
 ; Defines your hotkeys 
 ; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
@@ -66,7 +67,7 @@ Gui, Add, Text, xp+60 yp W50 center, 0-255
 Gui, Add, Text, x5 yp+25, Basic
 ADHD.gui_add("Edit", "BasicX", "xp+30 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "BasicY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", "F7AF36")
+ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vBasicSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vBasicCurrent
 Gui, Add, Text, xp+50 yp W20 center vBasicCurrentCol,
@@ -74,20 +75,24 @@ ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
-ADHD.gui_add("Edit", "FiveX", "xp+50 yp-3 W40", "", 0)
+ADHD.gui_add("Edit", "FiveX", "xp+30 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", "F7AF36")
-ADHD.gui_add("Edit", "FiveTol", "xp+60 yp W40", "", 10)
-Gui, Add, Edit, xp+50 yp W50 vFiveCurrent
-Gui, Add, Text, xp+60 yp+3 W40 center vFiveState,
+ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", default_colour)
+Gui, Add, Text, xp+50 yp W20 center vFiveSetCol, ■
+Gui, Add, Edit, xp+20 yp W50 vFiveCurrent
+Gui, Add, Text, xp+50 yp W20 center vFiveCurrentCol,
+ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", 10)
+Gui, Add, Text, xp+50 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
-ADHD.gui_add("Edit", "ThreeX", "xp+50 yp-3 W40", "", 0)
+ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 0)
 ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 0)
-ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", "F7AF36")
-ADHD.gui_add("Edit", "ThreeTol", "xp+60 yp W40", "", 10)
-Gui, Add, Edit, xp+50 yp W50 vThreeCurrent
-Gui, Add, Text, xp+60 yp+3 W40 center vThreeState,
+ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", default_colour)
+Gui, Add, Text, xp+50 yp W20 center vThreeSetCol, ■
+Gui, Add, Edit, xp+20 yp W50 vThreeCurrent
+Gui, Add, Text, xp+50 yp W20 center vThreeCurrentCol,
+ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", 10)
+Gui, Add, Text, xp+50 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
 Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
