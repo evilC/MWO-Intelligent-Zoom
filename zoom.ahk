@@ -36,14 +36,14 @@ ADHD.config_event("option_changed", "option_changed_hook")
 
 ADHD.init()
 
-Gui,+AlwaysOnTop
-
 ADHD.create_gui()
 
 ; The "Main" tab is tab 1
 Gui, Tab, 1
 ; ============================================================================================
 ; GUI SECTION
+
+ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+25", "Always On Top", 0)
 
 ; End GUI creation section
 ; ============================================================================================
@@ -138,6 +138,18 @@ app_inactive_hook(){
 
 option_changed_hook(){
 	global ADHD
+	
+	set_always_on_top()
+}
+
+set_always_on_top(){
+	global AlwaysOnTop
+	
+	if (AlwaysOnTop){
+		Gui,+AlwaysOnTop
+	} else {
+		Gui,-AlwaysOnTop
+	}
 }
 
 ; KEEP THIS AT THE END!!
