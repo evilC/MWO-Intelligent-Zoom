@@ -1,23 +1,63 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-;SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
-#InstallMouseHook
-#InstallKeybdHook
+﻿; MWO Intelligent Zoom
 
-SetKeyDelay, 0, 50
+; Create an instance of the library
+ADHD := New ADHDLib
 
 zooming := 0
 
-#IfWinActive, ahk_class CryENGINE
-*~Wheelup::
+; ============================================================================================
+; CONFIG SECTION - Configure ADHD
+
+; You may need to edit these depending on game
+SendMode, Event
+SetKeyDelay, 0, 50
+
+; Stuff for the About box
+
+ADHD.config_about({name: "Intelligent Zoom", version: 0.1, author: "evilC", link: "<a href=""http://evilc.com/proj/adhd"">ADHD Homepage</a>"})
+; The default application to limit hotkeys to.
+; Starts disabled by default, so no danger setting to whatever you want
+ADHD.config_default_app("CryENGINE")
+
+; GUI size
+ADHD.config_size(375,335)
+
+; Defines your hotkeys 
+; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
+; uiname is what to refer to it as in the UI (ie Human readable, with spaces)
+ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn"})
+ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut"})
+
+; Hook into ADHD events
+; First parameter is name of event to hook into, second parameter is a function name to launch on that event
+ADHD.config_event("app_active", "app_active_hook")
+ADHD.config_event("app_inactive", "app_inactive_hook")
+ADHD.config_event("option_changed", "option_changed_hook")
+
+ADHD.init()
+
+Gui,+AlwaysOnTop
+
+ADHD.create_gui()
+
+; The "Main" tab is tab 1
+Gui, Tab, 1
+; ============================================================================================
+; GUI SECTION
+
+; End GUI creation section
+; ============================================================================================
+
+
+ADHD.finish_startup()
+
+ZoomIn:
 	do_zoom(1)
 	return
-
-*~Wheeldown::
+	
+ZoomOut:
 	do_zoom(0)
 	return
-#IfWinActive
 
 do_zoom(dir){
 	Global zooming
@@ -87,3 +127,19 @@ pixel_check(x,y){
 		return 1
 	}
 }
+	
+app_active_hook(){
+	
+}
+
+app_inactive_hook(){
+
+}
+
+option_changed_hook(){
+	global ADHD
+}
+
+; KEEP THIS AT THE END!!
+;#Include ADHDLib.ahk		; If you have the library in the same folder as your macro, use this
+#Include <ADHDLib>			; If you have the library in the Lib folder (C:\Program Files\Autohotkey\Lib), use this
