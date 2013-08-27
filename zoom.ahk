@@ -127,22 +127,32 @@ get_zoom(){
 }
 
 ; Detects if x is present (is 1.0x, 1.5x or 3.0x likely to be visible?)
+; 1920x1200 = 1322,839
 mult_visible(){
-	return (pixel_check(1322,839))
+	global BasicX
+	global BasicY
+	global BasicCol
+	global BasicTol
+	
+	return (pixel_check(BasicX,BasicY,BasicCol,BasicTol))
 }
 
 ; Detects between 1.5x and 1.0x
+; 1920x1200 = 1314,837
 is_5(){
-	return (pixel_check(1314,837))
+	return (pixel_check(1314,837,"36ADF5",10))
 }
 
 ; Detects if 3.0
+; 1920x1200 = 1305,835
 is_3(){
-	return (pixel_check(1305,835))
+	return (pixel_check(1305,835,"36ADF5",10))
 }
 
-pixel_check(x,y){
-	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, 0x36adf5 , 10, Fast
+; Default colour is 0x36adf5
+pixel_check(x,y,col,tol){
+	col := "0x" col
+	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, %col% , %tol%, Fast
 	if Errorlevel {
 		return 0
 	} else {
@@ -172,6 +182,27 @@ set_always_on_top(){
 	} else {
 		Gui,-AlwaysOnTop
 	}
+}
+
+AscToHex(Inp,UC = 0)
+{
+	OldFmt = %A_FormatInteger%
+	SetFormat, Integer, hex
+
+	Loop, Parse, Inp
+	{
+		TransForm, Asc, Asc, %A_LoopField%
+		Asc += 0
+		StringTrimLeft, Hex, Asc, 2
+		IfEqual, UC, 0
+			Result = %Result%%Hex%
+		Else
+			Result = %Result%%Hex%00
+	}
+	SetFormat, Integer, %OldFmt%
+	StringUpper, Result, Result
+
+	Return Result
 }
 
 ; KEEP THIS AT THE END!!
