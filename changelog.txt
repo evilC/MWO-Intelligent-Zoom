@@ -6,6 +6,11 @@ Key:
 = : Change / Fix
 + : Added feature
 
+1.9 28th Aug 2013
+= Tweaks to max zoom mode for reliability.
++ If zoom is attempted but it cannot detect pixels, it tries again up to 3 times
++ Option to play debug sounds. This should help me solve reliability issues.
+
 1.8 28th Aug 2013
 + Max Zoom option is now a dropdown - Normal / Max Zoom / Toggle Min/Max
   Use the Toggle Min/Max feature to only need one button to toggle between min and max zoom

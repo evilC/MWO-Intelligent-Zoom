@@ -10,6 +10,7 @@ ADHD.run_as_admin()
 
 ; Set up vars
 zooming := 0
+tried_zoom := 0
 queued_zoom := 0
 calib_list := Array("Basic","Five","Three")
 default_colour := "F7AF36"
@@ -23,7 +24,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.8, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.9, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -118,6 +119,8 @@ CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when pl
 
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "xp+120 yp", "Always On Top", 0)
 
+ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
+
 ; End GUI creation section
 ; ============================================================================================
 
@@ -193,11 +196,14 @@ do_zoom(dir){
 	Global ZoomKey
 	Global ZoomDelay
 	Global ZoomMode
+	Global PlayDebugSounds
+	Global tried_zoom
+
 	
 	if (zooming){
 		;soundbeep, 200, 200
 		; Allow two zoom ins to be queued
-		if (dir && ZoomMode != "Normal"){
+		if (ZoomMode != "Normal"){
 			queued_zoom := 1
 		}
 		return
@@ -219,22 +225,28 @@ do_zoom(dir){
 		} else {
 			; zoom out
 			if (zoom > 1){
-				if (zoom == 3.0){
-					Send {%ZoomKey%}
-				} else {
-					Send {%ZoomKey%}{%ZoomKey%}
+				Send {%ZoomKey%}
+				if (zoom != 3.0){
+					queued_zoom := 1
 				}
 			}
 		}
 	} else {
-		;soundbeep, 100, 100
-		;soundbeep, 100, 100
+		if (PlayDebugSounds){
+			soundbeep, 100, 100
+			;Try again
+			if (tried_zoom <= 3){
+				tried_zoom := tried_zoom + 1
+				do_zoom(dir)
+			}
+		}
 	}
+	tried_zoom := 0
 	sleep, %ZoomDelay%
 	zooming := 0
 	if (queued_zoom == 1){
 		queued_zoom := 0
-		do_zoom(1)
+		do_zoom(dir)
 	}
 }
 
