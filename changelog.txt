@@ -6,6 +6,12 @@ Key:
 = : Change / Fix
 + : Added feature
 
+1.7 28th Aug 2013
++ Further tweaks to max zoom mode
+
+1.6 28th Aug 2013
++ Fixed max zoom - was only working in Testing Grounds
+
 1.5 28th Aug 2013
 + Added "Max Zoom Only" setting - Enable to only use 3x zoom (skip 1.5x zoom)
 

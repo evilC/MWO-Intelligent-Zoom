@@ -23,7 +23,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.5, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.7, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -206,10 +206,10 @@ do_zoom(dir){
 		if (dir){
 			; zoom in
 			if (zoom <= 1.5){
-				Send {z}
-			}
-			if (MaxZoomOnly && zoom <= 1.5){
-				Send {z}
+				if (MaxZoomOnly && zoom == 1.0){
+					queued_zoom := 1
+				}
+				Send {%ZoomKey%}
 			}
 		} else {
 			; zoom out
