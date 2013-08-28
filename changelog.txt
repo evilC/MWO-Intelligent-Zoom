@@ -6,6 +6,9 @@ Key:
 = : Change / Fix
 + : Added feature
 
+1.10 28th Aug 2013
+= Fixed newly introduced bug where it would retry zoom indefinitely if it failed to detect zoom rate
+
 1.9 28th Aug 2013
 = Tweaks to max zoom mode for reliability.
 + If zoom is attempted but it cannot detect pixels, it tries again up to 3 times
