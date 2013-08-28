@@ -23,7 +23,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.4, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.5, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -108,10 +108,14 @@ Gui, Add, Text, xp+60 yp, Zoom repeat delay (ms)
 ADHD.gui_add("Edit", "ZoomDelay", "xp+120 yp-3 W40", "", 150)
 ZoomDelay_TT := "How long after zooming to wait before allowing another zoom`nIf you have a custom wide FOV, you may need to set this higher"
 
-ADHD.gui_add("CheckBox", "AlwaysOnTop", "x5 yp+40", "Always On Top", 0)
+ADHD.gui_add("CheckBox", "MaxZoomOnly", "x5 yp+30", "Max Zoom Only", 0)
+MaxZoomOnly_TT := "Disable mid zoom - only allow fully zoomed or not zoomed at all"
 
 Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
 CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when playing to save CPU time"
+
+ADHD.gui_add("CheckBox", "AlwaysOnTop", "xp+120 yp", "Always On Top", 0)
+
 ; End GUI creation section
 ; ============================================================================================
 
@@ -186,6 +190,7 @@ do_zoom(dir){
 	Global queued_zoom
 	Global ZoomKey
 	Global ZoomDelay
+	Global MaxZoomOnly
 	
 	if (zooming){
 		;soundbeep, 200, 200
@@ -203,7 +208,9 @@ do_zoom(dir){
 			if (zoom <= 1.5){
 				Send {z}
 			}
-			
+			if (MaxZoomOnly && zoom <= 1.5){
+				Send {z}
+			}
 		} else {
 			; zoom out
 			if (zoom > 1){
