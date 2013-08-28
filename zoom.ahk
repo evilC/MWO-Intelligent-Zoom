@@ -23,7 +23,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.7, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 1.8, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -108,10 +108,12 @@ Gui, Add, Text, xp+60 yp, Zoom repeat delay (ms)
 ADHD.gui_add("Edit", "ZoomDelay", "xp+120 yp-3 W40", "", 150)
 ZoomDelay_TT := "How long after zooming to wait before allowing another zoom`nIf you have a custom wide FOV, you may need to set this higher"
 
-ADHD.gui_add("CheckBox", "MaxZoomOnly", "x5 yp+30", "Max Zoom Only", 0)
-MaxZoomOnly_TT := "Disable mid zoom - only allow fully zoomed or not zoomed at all"
+;ADHD.gui_add("CheckBox", "MaxZoomOnly", "x5 yp+30", "Max Zoom Only", 0)
+Gui, Add, Text, x5 yp+30, Zoom Mode
+ADHD.gui_add("DropDownList", "ZoomMode", "xp+80 yp-3 W120", "Normal||Max Only|Toggle Min/Max", "None")
+ZoomMode_TT := "Max only skips 1.5 zoom, Toggle lets you use Zoom In to toggle Min/Max"
 
-Gui, Add, CheckBox, x5 yp+25 vCalibMode gCalibModeChanged, Calibration Mode
+Gui, Add, CheckBox, x5 yp+30 vCalibMode gCalibModeChanged, Calibration Mode
 CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when playing to save CPU time"
 
 ADHD.gui_add("CheckBox", "AlwaysOnTop", "xp+120 yp", "Always On Top", 0)
@@ -190,23 +192,26 @@ do_zoom(dir){
 	Global queued_zoom
 	Global ZoomKey
 	Global ZoomDelay
-	Global MaxZoomOnly
+	Global ZoomMode
 	
 	if (zooming){
 		;soundbeep, 200, 200
 		; Allow two zoom ins to be queued
-		if (dir){
+		if (dir && ZoomMode != "Normal"){
 			queued_zoom := 1
 		}
 		return
 	}
 	zooming := 1
 	zoom := get_zoom()
+	if (zoom == 3.0 && ZoomMode == "Toggle Min/Max" && queued_zoom != 1){
+		dir := 0
+	}
 	if (zoom){
 		if (dir){
 			; zoom in
 			if (zoom <= 1.5){
-				if (MaxZoomOnly && zoom == 1.0){
+				if (ZoomMode != "Normal" && zoom == 1.0){
 					queued_zoom := 1
 				}
 				Send {%ZoomKey%}

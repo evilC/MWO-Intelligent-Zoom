@@ -6,6 +6,10 @@ Key:
 = : Change / Fix
 + : Added feature
 
+1.8 28th Aug 2013
++ Max Zoom option is now a dropdown - Normal / Max Zoom / Toggle Min/Max
+  Use the Toggle Min/Max feature to only need one button to toggle between min and max zoom
+
 1.7 28th Aug 2013
 + Further tweaks to max zoom mode
 
