@@ -6,6 +6,15 @@ Key:
 = : Change / Fix
 + : Added feature
 
+2.1 29th Aug 2013
++ Experimental head tracking support.
+  Allows you to control zoom by leaning closer to the screen.
+  Requires EITHER:
+  TrackIR (In Joystick Emulation Mode)
+  OR
+  FaceTrackNoIR (Free) plus a supported Webcam (Default settings, set "Game Protocol" to "vJoy")
+  Then choose the axis that represents lean (Z axis) in the Zoom GUI
+
 2.0 29th Aug 2013
 = Completely redesigned logic.
   The pixel detection routine is the same, but that is about it.
