@@ -205,7 +205,7 @@ PollStick:
 	{
 		tmp := StickID "Joy" axis_list_ahk[StickAxis]
 		GetKeyState, axis, % tmp
-		Tooltip, % joy_zoom_state " - " axis
+		;Tooltip, % joy_zoom_state " - " axis
 		if (axis < 50){
 			; zoom 3
 			if (joy_zoom_state){
