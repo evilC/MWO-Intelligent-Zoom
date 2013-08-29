@@ -21,6 +21,9 @@ default_colour := "F7AF36"
 zoom_tick_time := 0
 zoom_tick_dir := 0
 
+axis_list_ahk := Array("X","Y","Z","R","U","V")
+joy_zoom_state := 0
+
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
 
@@ -30,13 +33,13 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 2.0, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 2.1, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
 
 ; GUI size
-ADHD.config_size(375,310)
+ADHD.config_size(375,340)
 
 ; Defines your hotkeys 
 ; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
@@ -123,6 +126,13 @@ ADHD.gui_add("CheckBox", "AlwaysOnTop", "xp+120 yp", "Always On Top", 0)
 
 ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 
+Gui, Add, Text, x5 yp+30, Control zoom with head tracker on joystick ID: 
+ADHD.gui_add("DropDownList", "StickID", "xp+220 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
+StickID_TT := "Use with a head tracker such as TrackR=IR or FaceTrackNoIR in joystick emulation mode to control zoom by leaning"
+Gui, Add, Text, xp+60 yp+3, Axis
+ADHD.gui_add("DropDownList", "StickAxis", "xp+30 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
+
+
 ; End GUI creation section
 ; ============================================================================================
 
@@ -190,6 +200,52 @@ CalibModeTimer:
 	}
 	return
 
+PollStick:
+	IfWinActive, ahk_class CryENGINE 
+	{
+		tmp := StickID "Joy" axis_list_ahk[StickAxis]
+		GetKeyState, axis, % tmp
+		Tooltip, % joy_zoom_state " - " axis
+		if (axis < 50){
+			; zoom 3
+			if (joy_zoom_state){
+				if (joy_zoom_state != 3){
+					desired_zoom := 3
+					do_zoom(1)
+					joy_zoom_state := 3
+				}
+			} else {
+				joy_zoom_state := 3
+			}
+		} else if (axis < 0){
+			; disable zoom 2 for head tracking
+			; zoom 2
+			if (joy_zoom_state){
+				if (joy_zoom_state != 2){
+					desired_zoom := 2
+					joy_zoom_state := 2
+					do_zoom(1)
+				}
+			} else {
+				joy_zoom_state := 2
+			}
+		} else {
+			; zoom 1
+			if (joy_zoom_state){
+					;soundbeep
+				if (joy_zoom_state != 1){
+					desired_zoom := 1
+					joy_zoom_state := 1
+					do_zoom(1)
+				}
+			} else {
+				joy_zoom_state := 1
+			}
+
+		}
+	}
+	return
+
 do_zoom(dir){
 	Global ZoomKey
 	Global ZoomDelay
@@ -201,6 +257,7 @@ do_zoom(dir){
 	Global tried_zoom
 	Global zoom_tick_time
 	Global zoom_tick_dir
+	Global StickID
 	
 	; Eliminate wobble - after a zoom, block zooms in the opposite direction for a while
 	; Useful as the mouse wheel is prone to wobble
@@ -220,37 +277,47 @@ do_zoom(dir){
 		if (zoom){
 			; Zoom Readout read OK, proceed
 			if (desired_zoom){
-				; Zoom already in progress
-				if (zoom == last_zoom){
-					; Same zoom as when we last pressed the zoom button
-					if (tried_zoom <= 3){
-						; Keep waiting for change
-						tried_zoom += 1
-						; Wait another 50ms and try again
-						sleep, 50
+				if (StickID != "None"){
+					if (desired_zoom != zoom){
+						send_zoom()
 						continue
 					} else {
-						; Tried 3 times and failed, give up.
 						desired_zoom := 0
-						tried_zoom := 0
-						if (PlayDebugSounds){
-							soundbeep, 100, 100
-						}
-						; Stop trying
 						break
 					}
 				} else {
-					; Detected zoom change since zoom button last pressed
-					if (zoom == desired_zoom){
-						; Desired zoom reached
-						desired_zoom := 0
-						tried_zoom := 0
-						break
+					; Zoom already in progress
+					if (zoom == last_zoom){
+						; Same zoom as when we last pressed the zoom button
+						if (tried_zoom <= 3){
+							; Keep waiting for change
+							tried_zoom += 1
+							; Wait another 50ms and try again
+							sleep, 50
+							continue
+						} else {
+							; Tried 3 times and failed, give up.
+							desired_zoom := 0
+							tried_zoom := 0
+							if (PlayDebugSounds){
+								soundbeep, 100, 100
+							}
+							; Stop trying
+							break
+						}
 					} else {
-						; New zoom reached, but not the one we want. Zoom again.
-						last_zoom := zoom
-						send_zoom()
-						continue
+						; Detected zoom change since zoom button last pressed
+						if (zoom == desired_zoom){
+							; Desired zoom reached
+							desired_zoom := 0
+							tried_zoom := 0
+							break
+						} else {
+							; New zoom reached, but not the one we want. Zoom again.
+							last_zoom := zoom
+							send_zoom()
+							continue
+						}
 					}
 				}
 			} else {
@@ -309,7 +376,6 @@ do_zoom(dir){
 		; Sleep in case the code manages to get to the end of the loop - Saves CPU hit just in case
 		sleep, 50
 	}
-	
 }
 
 send_zoom(){
@@ -404,6 +470,7 @@ app_inactive_hook(){
 option_changed_hook(){
 	global ADHD
 	global calib_list
+	global StickID
 	
 	Loop, % calib_list.MaxIndex(){
 		swatch := calib_list[A_Index] "SetCol"
@@ -416,6 +483,11 @@ option_changed_hook(){
 			
 	set_always_on_top()
 	calib_mode_changed()
+	if (StickID == "None"){
+		SetTimer, PollStick, Off
+	} else {
+		SetTimer, PollStick, 50
+	}
 }
 
 calib_mode_changed(){
