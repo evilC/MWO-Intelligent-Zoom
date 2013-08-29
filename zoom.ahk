@@ -6,14 +6,18 @@ ADHD := New ADHDLib
 ; Ensure running as admin
 ADHD.run_as_admin()
 
-#MaxThreadsPerHotkey, 2
+#MaxThreadsBuffer on
+#MaxHotkeysPerInterval 999
 
 ; Set up vars
-zooming := 0
+desired_zoom := 0
+last_zoom := 0
 tried_zoom := 0
-queued_zoom := 0
 calib_list := Array("Basic","Five","Three")
+zoom_rates := Array(1.0,1.5,3.0)
 default_colour := "F7AF36"
+zoom_tick_time := 0
+zoom_tick_dir := 0
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -24,7 +28,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 1.10, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 2.0, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -134,7 +138,7 @@ ZoomIn:
 	return
 	
 ZoomOut:
-	do_zoom(0)
+	do_zoom(-1)
 	return
 
 CalibModeChanged:	
@@ -191,15 +195,196 @@ CalibModeTimer:
 	return
 
 do_zoom(dir){
-	Global zooming
-	Global queued_zoom
 	Global ZoomKey
 	Global ZoomDelay
 	Global ZoomMode
 	Global PlayDebugSounds
+	Global zoom_rates
+	Global desired_zoom
+	Global last_zoom
 	Global tried_zoom
-
+	Global zoom_tick_time
+	Global zoom_tick_dir
 	
+	; Eliminate wobble - after a zoom, block zooms in the opposite direction for a while
+	; Useful as the mouse wheel is prone to wobble
+	if (zoom_tick_time && (zoom_tick_time > A_TickCount)){
+		if (zoom_tick_dir != dir){
+			return
+		}
+	}
+	zoom_tick_time := A_TickCount + 250
+	zoom_tick_dir := dir
+	
+	; Use a loop, so we can keep trying to acheive desired result
+	Loop, {
+		; Do the Pixel Detection to try and work out what zoom we are in now
+		zoom := which_zoom(get_zoom())
+		
+		if (zoom){
+			; Zoom Readout read OK, proceed
+			if (desired_zoom){
+				; Zoom already in progress
+				if (zoom == last_zoom){
+					; Same zoom as when we last pressed the zoom button
+					if (tried_zoom <= 3){
+						; Keep waiting for change
+						tried_zoom += 1
+						; Wait another 50ms and try again
+						sleep, 50
+						continue
+					} else {
+						; Tried 3 times and failed, give up.
+						desired_zoom := 0
+						tried_zoom := 0
+						if (PlayDebugSounds){
+							soundbeep, 100, 100
+						}
+						; Stop trying
+						break
+					}
+				} else {
+					; Detected zoom change since zoom button last pressed
+					if (zoom == desired_zoom){
+						; Desired zoom reached
+						desired_zoom := 0
+						tried_zoom := 0
+						break
+					} else {
+						; New zoom reached, but not the one we want. Zoom again.
+						last_zoom := zoom
+						send_zoom()
+						continue
+					}
+				}
+			} else {
+			
+				; Start a new zoom
+				; Stop anything happening if zoom in at full zoom or out at no zoom
+				if (dir == 1){
+					; Zoom In
+					if (ZoomMode != "Normal"){
+						if (ZoomMode == "Max Only"){
+							desired_zoom := 3
+						} else {
+							if (zoom < 3){
+								desired_zoom := 3
+							} else {
+								desired_zoom := 1
+							}
+						}
+					} else {
+						desired_zoom := zoom + 1
+					}		
+				} else {
+					; Zoom Out
+					desired_zoom := 1
+				}
+				if (desired_zoom > 3){
+					desired_zoom := 3
+				} else if (desired_zoom < 1){
+					desired_zoom := 1
+				}
+				; Destination zoom decided, do we need to do anything? (Could be trying to zoom in at full zoom)
+				if (desired_zoom != zoom){
+					last_zoom := zoom
+					send_zoom()
+					continue
+				}
+			}
+		} else {
+			; Zoom Readout not read OK
+			if (tried_zoom <= 3){
+				tried_zoom += 1
+				; Wait another 50ms and try again
+				sleep, 50
+				continue
+			} else {
+				desired_zoom := 0
+				tried_zoom := 0
+				if (PlayDebugSounds){
+					soundbeep, 100, 100
+				}
+				; Stop trying
+				break
+			}
+
+		}
+		; Sleep in case the code manages to get to the end of the loop - Saves CPU hit just in case
+		sleep, 50
+	}
+	
+	/*
+	zoom := which_zoom(get_zoom())
+
+	if (zoom){
+		if (desired_zoom){
+			; Zoom already in progress
+			
+			; If the current zoom hasn't changed since last run...
+			if (zoom == last_zoom){
+				; Re-fire do_zoom to check again
+				retry_zoom(dir)
+				if (zoom == last_zoom){
+					; Failed to get to desired zoom - give up
+					desired_zoom := 0
+					zooming := 0
+				}
+				return
+			}
+			if (zoom == desired_zoom){
+				; Reach desired zoom, stop
+				desired_zoom := 0
+				zooming := 0
+				if (queued_zoom != 0){
+					tmp := queued_zoom
+					queued_zoom := 0
+					do_zoom(tmp)
+				}
+				return
+			} else {
+				; Different zoom to start zoom, but not the one we want, keep zooming...
+				soundbeep, 500, 100
+				last_zoom := zoom ; save last_zoom to current value, so script can tell when next zoom has taken effect
+				send_zoom()
+				do_zoom(dir)
+			}
+		} else {
+			; Start a new zoom
+			; Stop anything happening if zoom in at full zoom or out at no zoom
+			if (dir == -1){
+				desired_zoom := 1
+			} else {
+				if (ZoomMode != "Normal"){
+					desired_zoom := 3
+				} else {
+					desired_zoom := zoom + dir
+				}
+				
+			}
+			if (desired_zoom > 3){
+				desired_zoom := 3
+			} else if (desired_zoom < 1){
+				desired_zoom := 1
+			}
+			if (desired_zoom != zoom){
+				last_zoom := zoom
+				send_zoom()
+				do_zoom(dir)
+			} else {
+				; turn off desired mode
+				desired_zoom := 0
+			}
+			
+			
+			
+		}
+	} else {
+		; Could not detect zoom at start
+		retry_zoom(dir)
+	}
+	*/
+	/*
 	if (zooming){
 		;soundbeep, 200, 200
 		; Allow two zoom ins to be queued
@@ -250,7 +435,44 @@ do_zoom(dir){
 		queued_zoom := 0
 		do_zoom(dir)
 	}
+	*/
 }
+
+send_zoom(){
+	Global ZoomKey
+	Global ZoomDelay
+	
+	;soundbeep, 1000, 100
+	Send {%ZoomKey%}
+	Sleep, %ZoomDelay%
+}
+
+which_zoom(zm){
+	Global zoom_rates
+	
+	Loop, % zoom_rates.MaxIndex() {
+		if (zm == zoom_rates[A_Index]){
+			return %A_Index%
+		}
+	}
+	return 0
+}
+
+/*
+retry_zoom(dir){
+	Global PlayDebugSounds
+	Global tried_zoom
+	
+	if (PlayDebugSounds){
+		soundbeep, 100, 100
+	}
+	if (tried_zoom <= 3){
+		tried_zoom += 1
+		do_zoom(dir)
+	}
+	return
+}
+*/
 
 get_zoom(){
 	zoom := 0

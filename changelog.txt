@@ -6,6 +6,13 @@ Key:
 = : Change / Fix
 + : Added feature
 
+2.0 29th Aug 2013
+= Completely redesigned logic.
+  The pixel detection routine is the same, but that is about it.
+  New technique finds out what zoom you are in when you hit zoom...
+  ...then hits zoom and waits until it sees the next expected zoom before sending any more zooms.
+  Should be much more reliable.
+
 1.10 28th Aug 2013
 = Fixed newly introduced bug where it would retry zoom indefinitely if it failed to detect zoom rate
 
