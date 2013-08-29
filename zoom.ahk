@@ -6,7 +6,9 @@ ADHD := New ADHDLib
 ; Ensure running as admin
 ADHD.run_as_admin()
 
+; Buffer hotkeys - important, required so rolling mouse wheel up while already zooming queues a zoom
 #MaxThreadsBuffer on
+; Just in case I spin my mouse wheel in free-spinning mode ;)
 #MaxHotkeysPerInterval 999
 
 ; Set up vars
@@ -57,8 +59,6 @@ Gui, Tab, 1
 ; ============================================================================================
 ; GUI SECTION
 
-
-
 Gui, Add, Text, x30 yp+25 W100 center, Coordinates
 Gui, Add, Text, xp+110 yp W100 center, Colours
 Gui, Add, Text, xp+103 yp W100 center, Tolerance
@@ -69,8 +69,6 @@ Gui, Add, Text, xp+50 yp W50 center, Y
 Gui, Add, Text, xp+65 yp W50 center, Target
 Gui, Add, Text, xp+65 yp W50 center, Current
 Gui, Add, Text, xp+60 yp W50 center, 0-255
-;Gui, Add, Text, xp+65 yp W30 center, Y/N
-
 
 Gui, Add, Text, x5 yp+25, Basic
 ADHD.gui_add("Edit", "BasicX", "xp+30 yp-3 W40", "", 1322)
@@ -188,8 +186,6 @@ CalibModeTimer:
 				str := zoom
 			}
 			GuiControl,, CurrentZoom, %str%
-
-			;get_zoom()
 		}
 	}
 	return
@@ -314,139 +310,17 @@ do_zoom(dir){
 		sleep, 50
 	}
 	
-	/*
-	zoom := which_zoom(get_zoom())
-
-	if (zoom){
-		if (desired_zoom){
-			; Zoom already in progress
-			
-			; If the current zoom hasn't changed since last run...
-			if (zoom == last_zoom){
-				; Re-fire do_zoom to check again
-				retry_zoom(dir)
-				if (zoom == last_zoom){
-					; Failed to get to desired zoom - give up
-					desired_zoom := 0
-					zooming := 0
-				}
-				return
-			}
-			if (zoom == desired_zoom){
-				; Reach desired zoom, stop
-				desired_zoom := 0
-				zooming := 0
-				if (queued_zoom != 0){
-					tmp := queued_zoom
-					queued_zoom := 0
-					do_zoom(tmp)
-				}
-				return
-			} else {
-				; Different zoom to start zoom, but not the one we want, keep zooming...
-				soundbeep, 500, 100
-				last_zoom := zoom ; save last_zoom to current value, so script can tell when next zoom has taken effect
-				send_zoom()
-				do_zoom(dir)
-			}
-		} else {
-			; Start a new zoom
-			; Stop anything happening if zoom in at full zoom or out at no zoom
-			if (dir == -1){
-				desired_zoom := 1
-			} else {
-				if (ZoomMode != "Normal"){
-					desired_zoom := 3
-				} else {
-					desired_zoom := zoom + dir
-				}
-				
-			}
-			if (desired_zoom > 3){
-				desired_zoom := 3
-			} else if (desired_zoom < 1){
-				desired_zoom := 1
-			}
-			if (desired_zoom != zoom){
-				last_zoom := zoom
-				send_zoom()
-				do_zoom(dir)
-			} else {
-				; turn off desired mode
-				desired_zoom := 0
-			}
-			
-			
-			
-		}
-	} else {
-		; Could not detect zoom at start
-		retry_zoom(dir)
-	}
-	*/
-	/*
-	if (zooming){
-		;soundbeep, 200, 200
-		; Allow two zoom ins to be queued
-		if (ZoomMode != "Normal"){
-			queued_zoom := 1
-		}
-		return
-	}
-	zooming := 1
-	zoom := get_zoom()
-	if (zoom == 3.0 && ZoomMode == "Toggle Min/Max" && queued_zoom != 1){
-		dir := 0
-	}
-	if (zoom){
-		if (dir){
-			; zoom in
-			if (zoom <= 1.5){
-				if (ZoomMode != "Normal" && zoom == 1.0){
-					queued_zoom := 1
-				}
-				Send {%ZoomKey%}
-			}
-		} else {
-			; zoom out
-			if (zoom > 1){
-				Send {%ZoomKey%}
-				if (zoom != 3.0){
-					queued_zoom := 1
-				}
-			}
-		}
-	} else {
-		if (PlayDebugSounds){
-			;Try again
-			if (tried_zoom <= 3){
-				tried_zoom := tried_zoom + 1
-				zooming := 0
-				do_zoom(dir)
-				return
-			}
-			soundbeep, 100, 100
-		}
-	}
-	tried_zoom := 0
-	sleep, %ZoomDelay%
-	zooming := 0
-	if (queued_zoom == 1){
-		queued_zoom := 0
-		do_zoom(dir)
-	}
-	*/
 }
 
 send_zoom(){
 	Global ZoomKey
 	Global ZoomDelay
 	
-	;soundbeep, 1000, 100
 	Send {%ZoomKey%}
 	Sleep, %ZoomDelay%
 }
 
+; Translates between game zooms (1.0, 1.5, 3.0) to zoom level (1,2,3)
 which_zoom(zm){
 	Global zoom_rates
 	
@@ -458,22 +332,7 @@ which_zoom(zm){
 	return 0
 }
 
-/*
-retry_zoom(dir){
-	Global PlayDebugSounds
-	Global tried_zoom
-	
-	if (PlayDebugSounds){
-		soundbeep, 100, 100
-	}
-	if (tried_zoom <= 3){
-		tried_zoom += 1
-		do_zoom(dir)
-	}
-	return
-}
-*/
-
+; Operates the pixel detection routine to detect which numbers are visible in the Zoom Readout
 get_zoom(){
 	zoom := 0
 	if (mult_visible()){
