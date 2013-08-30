@@ -6,7 +6,7 @@ Key:
 = : Change / Fix
 + : Added feature
 
-2.3 29th Aug 2013
+2.3 30th Aug 2013
 = Improved reliability - sometimes 3.0x would be mis-detected as 1.0x.
   The script now knows what zoom to expect next after a keypress.
   If it detects a zoom other than expected, it re-tries to verify before re-issuing another zoom.
