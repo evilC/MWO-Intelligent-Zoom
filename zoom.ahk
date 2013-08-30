@@ -17,12 +17,14 @@ last_zoom := 0
 tried_zoom := 0
 calib_list := Array("Basic","Five","Three")
 zoom_rates := Array(1.0,1.5,3.0)
+zoom_sequence := Array(1,2,3,1)
 default_colour := "F7AF36"
 zoom_tick_time := 0
 zoom_tick_dir := 0
 
 axis_list_ahk := Array("X","Y","Z","R","U","V")
 joy_zoom_state := 0
+stick_string := 0
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -33,7 +35,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 2.1, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 2.3, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -126,12 +128,13 @@ ADHD.gui_add("CheckBox", "AlwaysOnTop", "xp+120 yp", "Always On Top", 0)
 
 ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 
-Gui, Add, Text, x5 yp+30, Control zoom with head tracker on joystick ID: 
-ADHD.gui_add("DropDownList", "StickID", "xp+220 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
+Gui, Add, Text, x5 yp+30, Control zoom with joystick ID: 
+ADHD.gui_add("DropDownList", "StickID", "xp+140 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
 StickID_TT := "Use with a head tracker such as TrackR=IR or FaceTrackNoIR in joystick emulation mode to control zoom by leaning"
-Gui, Add, Text, xp+60 yp+3, Axis
-ADHD.gui_add("DropDownList", "StickAxis", "xp+30 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
-
+Gui, Add, Text, xp+55 yp+3, Axis
+ADHD.gui_add("DropDownList", "StickAxis", "xp+25 yp-3 W50", "None||1|2|3|4|5|6|7|8", "None")
+Gui, Add, Text, xp+55 yp+3, Monitor
+Gui, Add, Edit, xp+40 yp-3 W50 vStickReadout
 
 ; End GUI creation section
 ; ============================================================================================
@@ -201,11 +204,10 @@ CalibModeTimer:
 	return
 
 PollStick:
+	GetKeyState, axis, % stick_string
+	GuiControl,,StickReadout, %axis%
 	IfWinActive, ahk_class CryENGINE 
 	{
-		tmp := StickID "Joy" axis_list_ahk[StickAxis]
-		GetKeyState, axis, % tmp
-		;Tooltip, % joy_zoom_state " - " axis
 		if (axis < 50){
 			; zoom 3
 			if (joy_zoom_state){
@@ -258,6 +260,8 @@ do_zoom(dir){
 	Global zoom_tick_time
 	Global zoom_tick_dir
 	Global StickID
+	Global ADHD
+	Global zoom_sequence
 	
 	; Eliminate wobble - after a zoom, block zooms in the opposite direction for a while
 	; Useful as the mouse wheel is prone to wobble
@@ -277,6 +281,8 @@ do_zoom(dir){
 		if (zoom){
 			; Zoom Readout read OK, proceed
 			if (desired_zoom){
+				ADHD.debug("Trying to reach zoom: " desired_zoom)
+
 				if (StickID != "None"){
 					if (desired_zoom != zoom){
 						send_zoom()
@@ -289,6 +295,7 @@ do_zoom(dir){
 					; Zoom already in progress
 					if (zoom == last_zoom){
 						; Same zoom as when we last pressed the zoom button
+						ADHD.debug("Same zoom as last time (" tried_zoom ")")
 						if (tried_zoom <= 3){
 							; Keep waiting for change
 							tried_zoom += 1
@@ -299,6 +306,7 @@ do_zoom(dir){
 							; Tried 3 times and failed, give up.
 							desired_zoom := 0
 							tried_zoom := 0
+							ADHD.debug("Aborting")
 							if (PlayDebugSounds){
 								soundbeep, 100, 100
 							}
@@ -308,20 +316,46 @@ do_zoom(dir){
 					} else {
 						; Detected zoom change since zoom button last pressed
 						if (zoom == desired_zoom){
+							ADHD.debug("Found Desired Zoom")
+
 							; Desired zoom reached
 							desired_zoom := 0
 							tried_zoom := 0
 							break
 						} else {
-							; New zoom reached, but not the one we want. Zoom again.
-							last_zoom := zoom
-							send_zoom()
+							ADHD.debug("Detected zoom change")
+							; New zoom reached, but not the one we want.
+							if (zoom == zoom_sequence[last_zoom + 1]){
+								; The zoom is the next one we expected to see.
+								ADHD.debug("Expected next zoom in sequence, keep zooming...")
+								last_zoom := zoom
+								send_zoom()
+							} else {
+								ADHD.debug("Hit unexpected zoom (tried_zoom)")
+								if (tried_zoom <= 3){
+									; Keep waiting for change
+									tried_zoom += 1
+									; Wait another 50ms and try again
+									sleep, 50
+									continue
+								} else {
+									; Tried 3 times and failed, give up.
+									desired_zoom := 0
+									tried_zoom := 0
+									ADHD.debug("Aborting")
+									if (PlayDebugSounds){
+										soundbeep, 100, 100
+									}
+									; Stop trying
+									break
+								}
+							}
 							continue
 						}
 					}
 				}
 			} else {
-			
+				ADHD.debug("New Zoom Commenced (" dir ")")
 				; Start a new zoom
 				; Stop anything happening if zoom in at full zoom or out at no zoom
 				if (dir == 1){
@@ -381,7 +415,9 @@ do_zoom(dir){
 send_zoom(){
 	Global ZoomKey
 	Global ZoomDelay
+	Global ADHD
 	
+	ADHD.debug("Sending Key: " ZoomKey)
 	Send {%ZoomKey%}
 	Sleep, %ZoomDelay%
 }
@@ -400,6 +436,8 @@ which_zoom(zm){
 
 ; Operates the pixel detection routine to detect which numbers are visible in the Zoom Readout
 get_zoom(){
+	global ADHD
+	
 	zoom := 0
 	if (mult_visible()){
 		if (!is_3()){
@@ -412,6 +450,7 @@ get_zoom(){
 			zoom := 3.0
 		}
 	}
+	ADHD.debug("`nDetected zoom: " zoom)
 	return zoom
 }
 
@@ -471,6 +510,9 @@ option_changed_hook(){
 	global ADHD
 	global calib_list
 	global StickID
+	global StickAxis
+	global stick_string
+	global axis_list_ahk
 	
 	Loop, % calib_list.MaxIndex(){
 		swatch := calib_list[A_Index] "SetCol"
@@ -483,6 +525,10 @@ option_changed_hook(){
 			
 	set_always_on_top()
 	calib_mode_changed()
+	
+	stick_string := StickID "Joy" axis_list_ahk[StickAxis]
+
+	
 	if (StickID == "None"){
 		SetTimer, PollStick, Off
 	} else {

@@ -6,6 +6,19 @@ Key:
 = : Change / Fix
 + : Added feature
 
+2.3 29th Aug 2013
+= Improved reliability - sometimes 3.0x would be mis-detected as 1.0x.
+  The script now knows what zoom to expect next after a keypress.
+  If it detects a zoom other than expected, it re-tries to verify before re-issuing another zoom.
+  eg, before if you were at 1.5x, and zoomed in, if it thought it detected 1.0x after you zoomed in, it would hit zoom again.
+  Now, it knows to expect 1.5x next, and if it fails to detect 1.5x three times in a row, gives up without hitting zoom again.
++ Much more info now displayed in debug mode.
+
+  
+2.2 29th Aug 2013
++ Added "Monitor" readout to monitor value of stick input for head tracking.
+  Should allow users to find the correct stick ID / Axis, and also help debugging
+
 2.1 29th Aug 2013
 + Experimental head tracking support.
   Allows you to control zoom by leaning closer to the screen.
