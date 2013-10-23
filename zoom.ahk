@@ -378,8 +378,13 @@ do_zoom(dir){
 					;ADHD.debug("desired_zoom: " desired_zoom ", zoom: " zoom)
 					if (ZoomMode == "Toggle Min/Max"){
 						; Do Nothing
-						desired_zoom := zoom
+						;desired_zoom := zoom
+						desired_zoom := 0
 						Send v
+						;soundbeep
+						;Sleep, %ZoomDelay%
+						Sleep, 1000
+						break
 					} else if (ZoomMode == "Max Only"){
 						desired_zoom := 1
 					} else {
