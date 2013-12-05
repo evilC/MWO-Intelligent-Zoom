@@ -32,7 +32,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 2.3a, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 2.4, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -93,8 +93,8 @@ ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
-ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 1305)
-ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 775)
+ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 1302)
+ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 777)
 ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vThreeSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vThreeCurrent
@@ -103,8 +103,8 @@ ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+25, Adv
-ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1305)
-ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 775)
+ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1300)
+ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 778)
 ADHD.gui_add("Edit", "FourCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFourSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFourCurrent
@@ -232,11 +232,11 @@ do_zoom(dir){
 		zoom := which_zoom(get_zoom())
 		
 		if (zoom){
-			; Zoom Readout read OK, proceed
+			; Zoom HUD indicator successfully read, proceed
 			if (desired_zoom){
+				; Zoom already in progress
 				ADHD.debug("Trying to reach zoom: " desired_zoom)
 				
-				; Zoom already in progress
 				if (zoom == last_zoom){
 					; Same zoom as when we last pressed the zoom button
 					ADHD.debug("Same zoom as last time (" tried_zoom ")")
@@ -260,21 +260,28 @@ do_zoom(dir){
 				} else {
 					; Detected zoom change since zoom button last pressed
 					if (zoom == desired_zoom){
+						; Desired zoom reached
 						ADHD.debug("Found Desired Zoom")
 
-						; Desired zoom reached
 						desired_zoom := 0
 						tried_zoom := 0
 						break
 					} else {
-						ADHD.debug("Detected zoom change")
 						; New zoom reached, but not the one we want.
-						if (zoom == zoom_sequence[last_zoom + 1]){
+						ADHD.debug("Detected zoom change")
+						; Decide which zoom we expect to see
+						if (last_zoom == 4){
+							expected_zoom := 1
+						} else {
+							expected_zoom := zoom_sequence[last_zoom + 1]
+						}
+						if (zoom == expected_zoom){
 							; The zoom is the next one we expected to see.
 							ADHD.debug("Expected next zoom in sequence, keep zooming...")
 							last_zoom := zoom
 							send_zoom()
 						} else {
+							; The zoom is not what we expected to see
 							ADHD.debug("Hit unexpected zoom (tried_zoom)")
 							if (tried_zoom <= 3){
 								; Keep waiting for change
@@ -298,42 +305,44 @@ do_zoom(dir){
 					}
 				}
 			} else {
-				ADHD.debug("New Zoom Commenced (" dir ")")
 				; Start a new zoom
-				; Stop anything happening if zoom in at full zoom or out at no zoom
-				if (dir == 1){
-					; Zoom In
-					if (ZoomMode != "Normal"){
-						if (ZoomMode == "Max Only"){
-							desired_zoom := 3
-						} else {
-							if (zoom < 3){
+				ADHD.debug("New Zoom Commenced (" dir ")")
+				
+				if (zoom == 4){
+					; zooming while in advanced zoom exits adv zoom by zooming.
+					desired_zoom := 1
+				} else {
+					; Process zoom in / out command
+					if (dir == 1){
+						; Zoom In
+						if (ZoomMode != "Normal"){
+							if (ZoomMode == "Max Only"){
 								desired_zoom := 3
 							} else {
-								desired_zoom := 1
+								if (zoom < 3){
+									desired_zoom := 3
+								} else {
+									desired_zoom := 1
+								}
 							}
+						} else {
+							desired_zoom := zoom + 1
+						}		
+					} else {
+						; Zoom Out
+						;ADHD.debug("desired_zoom: " desired_zoom ", zoom: " zoom)
+						if (ZoomMode == "Toggle Min/Max"){
+							; Do Nothing
+							desired_zoom := zoom
+							break
+						} else if (ZoomMode == "Max Only"){
+							desired_zoom := 1
+						} else {
+							desired_zoom := zoom - 1
 						}
-					} else {
-						desired_zoom := zoom + 1
-					}		
-				} else {
-					; Zoom Out
-					;ADHD.debug("desired_zoom: " desired_zoom ", zoom: " zoom)
-					if (ZoomMode == "Toggle Min/Max"){
-						; Do Nothing
-						;desired_zoom := zoom
-						desired_zoom := 0
-						Send v
-						;soundbeep
-						;Sleep, %ZoomDelay%
-						Sleep, 1000
-						break
-					} else if (ZoomMode == "Max Only"){
-						desired_zoom := 1
-					} else {
-						desired_zoom := zoom - 1
 					}
 				}
+				; Clamp to valid range
 				if (desired_zoom > 3){
 					desired_zoom := 3
 				} else if (desired_zoom < 1){
@@ -347,7 +356,7 @@ do_zoom(dir){
 				}
 			}
 		} else {
-			; Zoom Readout not read OK
+			; Zoom HUD indicator not read OK
 			if (tried_zoom <= 3){
 				tried_zoom += 1
 				; Wait another 50ms and try again
@@ -369,6 +378,7 @@ do_zoom(dir){
 	}
 }
 
+; Hits the zoom key
 send_zoom(){
 	Global ZoomKey
 	Global ZoomDelay
@@ -467,7 +477,8 @@ pixel_check(x,y,col,tol){
 		return 1
 	}
 }
-	
+
+; Hooks into the ADHD system	
 app_active_hook(){
 	
 }
@@ -476,10 +487,12 @@ app_inactive_hook(){
 
 }
 
+; Option was changed / run on startup
 option_changed_hook(){
 	global ADHD
 	global calib_list
 	
+	; Build list of controls to update for Calibration Mode
 	Loop, % calib_list.MaxIndex(){
 		swatch := calib_list[A_Index] "SetCol"
 		cont := calib_list[A_Index] "Col"
@@ -493,6 +506,7 @@ option_changed_hook(){
 	calib_mode_changed()
 }
 
+; Enable / Diable Calibration Mode
 calib_mode_changed(){
 	global CalibMode
 	gui, submit, nohide
@@ -512,6 +526,7 @@ calib_mode_changed(){
 	}
 }
 
+; Makes the app always on top
 set_always_on_top(){
 	global AlwaysOnTop
 	
