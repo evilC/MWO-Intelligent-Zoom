@@ -35,13 +35,16 @@ OK, here is where it starts to get a litte complicated, so listen up...
 In order to understand how to calibrate the macro, it helps to explain how it works:
 The macro examines the colour of pixels on the screen, and is looking for the yellow HUD colour.
 In the bottom-right of the MWO HUD is a Zoom Readout (ZR) which tells you which zoom mode you are in.
-It reads either "1.0x", "1.5x" or "3.0x"
+It reads either "1.0x", "1.5x" or "3.0x" (plus "4.0x" when using the Advanced Zoom Module if you have that fitted)
 Also, the ZR might not be visible (eg you are powered down or the map is open).
 As the script cannot "read" the ZR (the screen is just a grid of coloured dots to the script), it needs 3 reference coordinates.
 i)   "Basic" - A pixel that should always be HUD colour (eg the middle of the "x" at the end of the ZR)
 This is used to detect if you are in map mode or powered down etc - as long as this pixel is the HUD colour, the script will proceed.
 ii)  "1.5" - A pixel that is only the HUD colour when at 1.5x zoom (eg the middle of the 5)
 iii) "3.0" - A pixel that is only the HUD colour when at 3.0x zoom (eg the middle of the 3)
+
+The fourth "Adv" row is for the "Advanced Zoom" module.
+If you have this, you can check the "Enable Adv Zoom Module" checkbox and find a pixel unique to 4.0x zoom (eg the left-most part of the 4).
 
 It can be very useful to open a screenshot of your game screen in a paint program to find coordinates.
 In MWO, hit ALT+PrintScreen
@@ -50,13 +53,15 @@ You can zoom in/out with CTRL+Mouse wheel
 In the bottom left is shown current coordinates
 
 For most users, the calibration procedure should be this:
-Complete the 3 rows (Basic, 1.5, 3.0) in order.
+Complete the first 3 rows (Basic, 1.5, 3.0) in order.
 a) Find some x, y coordinates for that row that look like they might work
 b) Put the coordinates X and Y in the boxes for that row and switch to MWO
 c) The "State" column for that row says "YES" when it detects a HUD-coloured pixel, and NO if not.
 You want the "Basic" row to always say YES and the other two rows to only say YES in the relevant mode
 
 There is a "Detected Zoom" display at the bottom of the main tab - if it correctly displays your current zoom, you should be good.
+
+Once you have that down, configure the Advanced Zoom Module if desired.
 
 For some users, you may need to mess with the colour values:
 The "Target" box is the colour it is looking for (Should be the MWO HUD yellow)

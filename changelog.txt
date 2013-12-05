@@ -6,6 +6,13 @@ Key:
 = : Change / Fix
 + : Added feature
 
+2.4 5th Dec 2013
++ Advanced Zoom module now fully supported
+  WARNING! You may need to re-calibrate to make use of it.
+  If you play in 1080p res, the default settings should work - so try adding a new profile.
++ Update Notifications are now enabled for this application.
+= Experimental head tracking / joystick support removed.
+
 2.3 30th Aug 2013
 = Improved reliability - sometimes 3.0x would be mis-detected as 1.0x.
   The script now knows what zoom to expect next after a keypress.

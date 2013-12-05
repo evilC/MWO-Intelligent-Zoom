@@ -40,6 +40,9 @@ ADHD.config_default_app("CryENGINE")
 ; GUI size
 ADHD.config_size(375,340)
 
+; Configure update notifications:
+ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
+
 ; Defines your hotkeys 
 ; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
 ; uiname is what to refer to it as in the UI (ie Human readable, with spaces)
@@ -127,6 +130,9 @@ ZoomDelay_TT := "How long after zooming to wait before allowing another zoom`nIf
 Gui, Add, Text, x5 yp+30, Zoom Mode
 ADHD.gui_add("DropDownList", "ZoomMode", "xp+80 yp-3 W120", "Normal||Max Only|Toggle Min/Max", "None")
 ZoomMode_TT := "Max only skips 1.5 zoom, Toggle lets you use Zoom In to toggle Min/Max"
+
+ADHD.gui_add("CheckBox", "AdvZoom", "xp+140 yp+2", "Enable Adv Zoom Module", 0)
+AdvZoom_TT := "If you might be using the Advanced Zoom module, check this box.`nOtherwise, leave it unchecked to improve performance."
 
 Gui, Add, CheckBox, x5 yp+30 vCalibMode gCalibModeChanged, Calibration Mode
 CalibMode_TT := "Use this mode to help you find correct values`nTURN OFF when playing to save CPU time"
@@ -404,6 +410,7 @@ which_zoom(zm){
 ; Operates the pixel detection routine to detect which numbers are visible in the Zoom Readout
 get_zoom(){
 	global ADHD
+	Global AdvZoom
 	
 	zoom := 0
 	if (mult_visible()){
@@ -412,7 +419,7 @@ get_zoom(){
 		} else if (is_5()){
 			zoom := 1.5
 		} else {
-			if (is_4()){
+			if (AdvZoom && is_4()){
 				zoom := 4.0
 			} else {
 				zoom := 1.0
