@@ -6,6 +6,16 @@ Key:
 = : Change / Fix
 + : Added feature
 
+3.0 5th Dec 2013
+= Reworked internal structure.
+  Should result in it being much easier to control cases where you roll the mouse wheel too many times and unwanted zooms are queued.
+  Toggle min/max mode should be much less jumpy now.
+
+2.5 5th Dec 2013
++ Added "Zoom Out sends Adv Zoom in Min/Max mode" option, plus a box to set which key to use for Advanced Zoom
+  Intended for use with mouse wheel - set Zoom Mode to "Min / Max Toggle", then tick this and the "Enable Advanced Zoom" option.
+  Then wheel up will toggle min/max normal zoom, wheel down will toggle Advanced Zoom.
+  
 2.4 5th Dec 2013
 + Advanced Zoom module now fully supported
   WARNING! You may need to re-calibrate to make use of it.

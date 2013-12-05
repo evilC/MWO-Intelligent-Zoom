@@ -17,6 +17,9 @@ Tick "Program Mode" to change bindings.
 Also tick the "Limit Application" box on this screen to only take effect inside MWO
 Remember to untick "Program Mode" before trying to use the macro!
 
+You should also check the settings of the "MWO Keys" boxes on the main tab and make sure these match MWO.
+For example, for users of German keyboards, the default key for zoom is "y", not "z".
+
 The default settings should work for 1080p, so you may be able to skip the rest of the stages
 
 (You will need to repeat from this step if you change resolution)
