@@ -12,17 +12,16 @@ ADHD.run_as_admin()
 #MaxHotkeysPerInterval 999
 
 ; Set up vars
-desired_zoom := 0
-last_zoom := 0
 tried_zoom := 0
 calib_list := Array("Basic","Five","Three","Four")
 zoom_rates := Array(1.0,1.5,3.0,4.0)
-zoom_sequence := Array(1,2,3,1)
+zoom_sequence := Array(1,2,3,1,2)
 default_colour := "F7AF36"
 zoom_tick_time := 0		; time at which input was last processed
 zoom_tick_dir := 0		; last zoom direction	
 zoom_waiting := 0		; whether a zoom is queued, and in which direction.
 current_zoom := 1		; the zoom level the code thinks it is currently in
+desired_zoom := 0 		; the zoom level we are trying to get to (0 = not zooming)
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -33,7 +32,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 3.0, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 4.0, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -129,7 +128,7 @@ ZoomKey_TT := "The key bound to Advance Zoom (Module) in MWO"
 
 Gui, Add, Text, xp+40 yp+3, Zoom repeat delay (ms)
 ADHD.gui_add("Edit", "ZoomDelay", "xp+120 yp-3 W30", "", 150)
-ZoomDelay_TT := "How long after zooming to wait before allowing another zoom`nIf you have a custom wide FOV, you may need to set this higher"
+ZoomDelay_TT := "How long to leave between zooms.`nWARNING! You need to adjust this figure in an actual game!`nTesting Grounds does not require a delay, BUT A MATCH DOES!"
 
 ;ADHD.gui_add("CheckBox", "MaxZoomOnly", "x5 yp+30", "Max Zoom Only", 0)
 Gui, Add, Text, x5 yp+30, Zoom Mode
@@ -234,9 +233,9 @@ process_input(dir){
 	Global zoom_waiting
 	Global ZoomMode
 	Global current_zoom
+	Global desired_zoom
 	
 	if (zoom_tick_time){
-		;if ((zoom_tick_time > A_TickCount)){
 		if (((zoom_tick_time + 250) > A_TickCount)){
 			; Eliminate wobble - after a zoom, block zooms in the opposite direction for 250ms
 			; Useful as the mouse wheel is prone to wobble
@@ -257,6 +256,20 @@ process_input(dir){
 	zoom_tick_time := A_TickCount
 	zoom_tick_dir := dir
 	
+	/*
+	; Decide how many zooms are wanted
+	if (ZoomMode != "Normal"){
+		step := 1
+	} else {
+		step := 2
+	}
+	tmp := desired_zoom + (step * dir)
+	if (tmp > 3){
+		tmp := 3
+	} else if (tmp < 1){
+		tmp := 1
+	}
+	*/
 	; let zoom thread know there is work to do
 	zoom_waiting := dir
 }
@@ -283,7 +296,6 @@ do_zoom(dir){
 	Global PlayDebugSounds
 	Global zoom_rates
 	Global desired_zoom
-	Global last_zoom
 	Global tried_zoom
 	Global zoom_tick_time
 	Global zoom_tick_dir
@@ -302,13 +314,14 @@ do_zoom(dir){
 		
 		if (current_zoom){
 			; Zoom HUD indicator successfully read, proceed
+
 			if (desired_zoom){
 				; Zoom already in progress
 				ADHD.debug("Trying to reach zoom: " desired_zoom)
-				
-				if (current_zoom == last_zoom){
-					; Same zoom as when we last pressed the zoom button
-					ADHD.debug("Same zoom as last time (" tried_zoom ")")
+
+				if (current_zoom != desired_zoom){
+					; Unexpected zoom
+					ADHD.debug("Expected zoom " desired_zoom ", got zoom " current_zoom " (Try #" tried_zoom ")")
 					if (tried_zoom <= 3){
 						; Keep waiting for change
 						tried_zoom += 1
@@ -327,117 +340,65 @@ do_zoom(dir){
 						break
 					}
 				} else {
-					; Detected zoom change since zoom button last pressed
-					if (current_zoom == desired_zoom){
-						; Desired zoom reached
-						ADHD.debug("Found Desired Zoom")
-						
-						desired_zoom := 0
-						tried_zoom := 0
-						break
-					} else {
-						; New zoom reached, but not the one we want.
-						ADHD.debug("Detected zoom change")
-						; Decide which zoom we expect to see
-						if (last_zoom == 4){
-							expected_zoom := 1
-						} else {
-							expected_zoom := zoom_sequence[last_zoom + 1]
-						}
-						if (current_zoom == expected_zoom){
-							; If we are in the process of zooming out from zoom 3 to zoom 1.5 in normal mode...
-							; .. if another zoom out is waiting - that is indicating to go to zoom 1, which we are in.
-							if (ZoomMode == "Normal" && desired_zoom == 2 && zoom_waiting == -1){
-								zoom_waiting := 0
-								desired_zoom := 0
-								tried_zoom := 0
-								break
-							}
-							
-							; The zoom is the next one we expected to see, keep zooming...
-							ADHD.debug("Expected next zoom in sequence, keep zooming...")
-							last_zoom := zoom
-							send_zoom()
-						} else {
-							; The zoom is not what we expected to see
-							ADHD.debug("Hit unexpected zoom (tried_zoom)")
-							if (tried_zoom <= 3){
-								; Keep waiting for change
-								tried_zoom += 1
-								; Wait another 50ms and try again
-								sleep, 50
-								continue
-							} else {
-								; Tried 3 times and failed, give up.
-								desired_zoom := 0
-								tried_zoom := 0
-								ADHD.debug("Aborting")
-								if (PlayDebugSounds){
-									soundbeep, 100, 100
-								}
-								; Stop trying
-								break
-							}
-						}
-						continue
-					}
+					; Desired zoom reached
+					ADHD.debug("Found Desired Zoom")
+					
+					desired_zoom := 0
+					tried_zoom := 0
+					break
 				}
 			} else {
 				; Start a new zoom
-				ADHD.debug("New Zoom Commenced (" dir ")")
 				
-				if (current_zoom == 4){
-					; zooming while in advanced zoom exits adv zoom by zooming.
-					desired_zoom := 1
+				; Cater for various zoom modes
+				if (ZoomMode != "Normal"){
+					steps := 2
 				} else {
-					; Process zoom in / out command
-					if (dir == 1){
-						; Zoom In
-						if (ZoomMode != "Normal"){
-							if (ZoomMode == "Max Only"){
-								desired_zoom := 3
-							} else {
-								; Mix / Max Toggle
-								if (current_zoom < 3){
-									desired_zoom := 3
-								} else {
-									desired_zoom := 1
-								}
-							}
-						} else {
-							desired_zoom := zoom + 1
-							if (desired_zoom > 3){
-								desired_zoom := 3
-							}
-						}		
+					; The pixel check to see which zoom we are in would have taken some time.
+					; Check to see if another zoom has been queued in the same direction (eg mouse wheel rolled more than once)
+					; If so, clear it from buffer and do it now, as it may result in LESS zooms
+					; ie was at 3, zoomed out once is at 1.5 (2 zooms), but if another zoom out waiting then we want zoom 1, which is 1 zoom away
+					if (zoom_waiting == dir){
+						zoom_waiting := 0
+						steps := 2
 					} else {
-						; Zoom Out
-						;ADHD.debug("desired_zoom: " desired_zoom ", zoom: " zoom)
-						if (ZoomMode == "Toggle Min/Max"){
-							if (AdvZoomMinMax){
-								; Send Advanced zoom on zoom out option
-								Send {%AdvZoomKey%}
-								current_zoom := 4
-								break
-							} else {
-								; Do Nothing
-								desired_zoom := current_zoom
-								break
-							}
-						} else if (ZoomMode == "Max Only"){
-							desired_zoom := 1
-						} else {
-							desired_zoom := zoom - 1
-							if (desired_zoom < 1){
-								desired_zoom := 1
-							}
-						}
+						steps := 1
 					}
 				}
-				; Destination zoom decided, do we need to do anything? (Could be trying to zoom in at full zoom)
+
+				; Work out desired_zoom
+				if (ZoomMode == "Toggle Min/Max"){
+					if (current_zoom == 3 && dir == 1){
+						dir == -1
+					} else if (AdvZoomMinMax && current_zoom != 4 && dir == -1){
+						; Send Advanced zoom on zoom out option
+						send_adv_zoom()
+						break
+					}
+				}
+
+				if (current_zoom == 4){
+					; zooming while in advanced zoom exits adv zoom by zooming.
+					send_adv_zoom()
+					break
+				} else {
+					tmp := current_zoom + (steps * dir)
+					desired_zoom := clamp_zoom(tmp)
+				}
+
 				if (desired_zoom != current_zoom){
-					last_zoom := current_zoom
-					send_zoom()
+					; work out how many zooms away desired_zoom is
+					ctr := 0
+					z := current_zoom + 1
+					Loop {
+						ctr++
+						if (zoom_sequence[z] == desired_zoom){
+							break
+						}
+						z++
+					}
+					ADHD.debug("New Zoom Commenced: " ctr " times in dir " dir )
+					send_zoom(ctr)
 					continue
 				}
 			}
@@ -464,16 +425,42 @@ do_zoom(dir){
 	}
 }
 
-; Hits the zoom key
-send_zoom(){
+; Clamps an amount to one of the normal zoom values (1-3)
+clamp_zoom(z){
+	if (z > 3){
+		z := 3
+	} else if (z < 1){
+		z := 1
+	}
+	return z
+}
+
+; Sends the key for Advanced zoom, and sets variables to indicate we are in advanced zoom mode.
+send_adv_zoom(){
+	Global AdvZoomKey
+	Global current_zoom
+	Global desired_zoom
+
+	ADHD.debug("Sending Advanced Zoom Key")
+	Send {%AdvZoomKey%}
+	current_zoom := 4
+	desired_zoom := 0
+}
+
+; Sends the key for zoom
+send_zoom(amt){
 	Global ZoomKey
 	Global ZoomDelay
 	Global ADHD
 	
-	ADHD.debug("Sending Key: " ZoomKey)
-	Send {%ZoomKey%}
-	Sleep, %ZoomDelay%
+	ADHD.debug("Sending Zoom key x" amt)
+	Loop % amt {
+		Send {%ZoomKey%}
+		; This sleep is IMPORTANT. Not needed in Testing Grounds, but delay needed in match!
+		Sleep, %ZoomDelay%
+	}
 }
+
 
 ; Translates between game zooms (1.0, 1.5, 3.0) to zoom level (1,2,3)
 which_zoom(zm){
