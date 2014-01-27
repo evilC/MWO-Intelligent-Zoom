@@ -236,7 +236,7 @@ process_input(dir){
 	Global desired_zoom
 	
 	if (zoom_tick_time){
-		if (((zoom_tick_time + 250) > A_TickCount)){
+		if (((zoom_tick_time + 150) > A_TickCount)){
 			; Eliminate wobble - after a zoom, block zooms in the opposite direction for 250ms
 			; Useful as the mouse wheel is prone to wobble
 			if (zoom_tick_dir != dir){
