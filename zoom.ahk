@@ -105,8 +105,8 @@ ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
-ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 1302)
-ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 777)
+ADHD.gui_add("Edit", "ThreeX", "xp+30 yp-3 W40", "", 1301)
+ADHD.gui_add("Edit", "ThreeY", "xp+50 yp W40", "", 774)
 ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vThreeSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vThreeCurrent
@@ -115,8 +115,8 @@ ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+25, Adv
-ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1300)
-ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 778)
+ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1296)
+ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 775)
 ADHD.gui_add("Edit", "FourCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFourSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFourCurrent
