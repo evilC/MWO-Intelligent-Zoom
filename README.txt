@@ -39,6 +39,8 @@ Also tick the "Limit Application" box on this screen to only take effect inside 
 On the Main tab, tick the "Always on Top" box
 Again on the main tab, tick the "Calibration Mode" box.
 Tab back into MWO, the Zoom GUI should still be on top. Make sure it is not covering the Zoom Readout (1.0x, 1.5x, 3.0x etc) in the lower right of the HUD.
+Try the zoom keys you bound in step 3 (eg Wheel Up and Wheel Down). Does everything work as expected? If so, skip to step 6!!
+If you skip and discover later it doesn't quite work all the time, you can do steps 4-6 again.
 
 5a) Calibrate coordinates
 If using 1080p, you should not need to do anything here.
