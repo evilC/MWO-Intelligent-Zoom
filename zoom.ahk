@@ -48,6 +48,10 @@ ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
 ; uiname is what to refer to it as in the UI (ie Human readable, with spaces)
 ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn"})
 ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut"})
+ADHD.config_hotkey_add({uiname: "Calibrate Basic", subroutine: "CalibrateBasic"})
+ADHD.config_hotkey_add({uiname: "Calibrate 1.5x", subroutine: "Calibrate1_5x"})
+ADHD.config_hotkey_add({uiname: "Calibrate 3.0x", subroutine: "Calibrate3x"})
+ADHD.config_hotkey_add({uiname: "Calibrate 4x", subroutine: "Calibrate4x"})
 
 ; Hook into ADHD events
 ; First parameter is name of event to hook into, second parameter is a function name to launch on that event
@@ -158,6 +162,9 @@ ADHD.finish_startup()
 start_heartbeat()
 return
 
+; Hotkey Subroutines
+; =================================================
+
 ZoomIn:
 	process_input(1)
 	;zoom_waiting := 1
@@ -170,7 +177,6 @@ ZoomOut:
 	;do_zoom(-1, A_TickCount)
 	return
 
-	
 CalibModeChanged:	
 	calib_mode_changed()
 	return
@@ -179,6 +185,31 @@ CalibModeTimer:
 	CalibModeTimer()
 	return
 
+CalibrateBasic:
+	calibrate_colour("Basic")
+	;CalibrateBasic()
+	return
+
+Calibrate1_5x:
+	calibrate_colour("Five")
+	;Calibrate1_5x()
+	return
+
+Calibrate3x:
+	calibrate_colour("Three")
+	;Calibrate3x()
+	return
+
+Calibrate4x:
+	calibrate_colour("Four")
+	;Calibrate4x()
+	return
+
+; Functions
+; =================================================
+
+; Calibration Mode main loop
+; Populates Current+Swatch and State columns. Also the Detected Zoom readout at bottom
 CalibModeTimer(){
 	Global calib_list
 	if WinActive("ahk_class CryENGINE"){
@@ -242,6 +273,17 @@ CalibModeTimer(){
 		}
 	}
 	return
+}
+
+; Takes the colour from the Current column and puts it in the Target column
+calibrate_colour(colour){
+	Global CalibMode
+
+	if (CalibMode){
+		GuiControlGet, tmp,, %colour%Current
+		GuiControl,,%colour%Col, %tmp%
+		soundbeep
+	}
 }
 
 ; Called on zoom in/out keystroke and sets a variable when one is pressed.
