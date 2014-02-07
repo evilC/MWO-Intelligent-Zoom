@@ -11,6 +11,7 @@ Key:
 = Simplified "Quick Start" instructions.
 ! Due to font changes in UI2.0, pixel coordinates have changed.
 = New Default coordinates for 1080p - create a new profile or delete your INI file to get them.
+= Default tolerance changed to 40
 = Calibration Mode now makes many less pixel checks
 = Using zoom hotkeys in Calibration Mode now works (ie you can test in Calibration Mode)
 + Bindings added to quickly copy the colour from the Current to the Target box in Calibration Mode.

@@ -17,6 +17,7 @@ calib_list := Array("Basic","Five","Three","Four")
 zoom_rates := Array(1.0,1.5,3.0,4.0)
 zoom_sequence := Array(1,2,3,1,2)
 default_colour := "F7AF36"
+default_tol := "40"
 zoom_tick_time := 0		; time at which input was last processed
 zoom_tick_dir := 0		; last zoom direction	
 zoom_waiting := 0		; whether a zoom is queued, and in which direction.
@@ -90,7 +91,7 @@ ADHD.gui_add("Edit", "BasicCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vBasicSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vBasicCurrent
 Gui, Add, Text, xp+50 yp W20 center vBasicCurrentCol,
-ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", 10)
+ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
@@ -100,7 +101,7 @@ ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFiveSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFiveCurrent
 Gui, Add, Text, xp+50 yp W20 center vFiveCurrentCol,
-ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", 10)
+ADHD.gui_add("Edit", "FiveTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vFiveState,
 
 Gui, Add, Text, x5 yp+25, 3.0
@@ -110,7 +111,7 @@ ADHD.gui_add("Edit", "ThreeCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vThreeSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vThreeCurrent
 Gui, Add, Text, xp+50 yp W20 center vThreeCurrentCol,
-ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", 10)
+ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+25, Adv
@@ -120,7 +121,7 @@ ADHD.gui_add("Edit", "FourCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFourSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFourCurrent
 Gui, Add, Text, xp+50 yp W20 center vFourCurrentCol,
-ADHD.gui_add("Edit", "FourTol", "xp+20 yp W40", "", 10)
+ADHD.gui_add("Edit", "FourTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vFourState,
 
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
