@@ -115,8 +115,8 @@ ADHD.gui_add("Edit", "ThreeTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vThreeState,
 
 Gui, Add, Text, x5 yp+25, Adv
-ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1296)
-ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 775)
+ADHD.gui_add("Edit", "FourX", "xp+30 yp-3 W40", "", 1300)
+ADHD.gui_add("Edit", "FourY", "xp+50 yp W40", "", 779)
 ADHD.gui_add("Edit", "FourCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFourSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFourCurrent
@@ -304,20 +304,19 @@ process_input(dir){
 	Global current_zoom
 	Global desired_zoom
 	
+	wobble_time := 150
+
 	if (zoom_tick_time){
-		if (((zoom_tick_time + 150) > A_TickCount)){
-			; Eliminate wobble - after a zoom, block zooms in the opposite direction for 250ms
+		if (((zoom_tick_time + wobble_time) > A_TickCount)){
+			; Eliminate wobble - after a zoom, block zooms in the opposite direction for wobble_time ms
 			; Useful as the mouse wheel is prone to wobble
 			if (zoom_tick_dir != dir){
 				return
 			}
 			
-			; In Min/Max mode etc, ignore input for 250ms after last input
+			; In toggle modes, ignore ALL input for wobble_time ms after last input
 			if (ZoomMode != "Normal"){
-				; But only if we are not leaving advanced zoom (so you can roll mouse up twice to quit adv zoom and go straight to max norm zoom)
-				if (current_zoom != 4){
-					return
-				}
+				return
 			}
 		}
 	}
@@ -325,20 +324,6 @@ process_input(dir){
 	zoom_tick_time := A_TickCount
 	zoom_tick_dir := dir
 	
-	/*
-	; Decide how many zooms are wanted
-	if (ZoomMode != "Normal"){
-		step := 1
-	} else {
-		step := 2
-	}
-	tmp := desired_zoom + (step * dir)
-	if (tmp > 3){
-		tmp := 3
-	} else if (tmp < 1){
-		tmp := 1
-	}
-	*/
 	; let zoom thread know there is work to do
 	zoom_waiting := dir
 }
@@ -608,6 +593,9 @@ get_zoom(calibmode){
 				debug_line .= "4x - OK (" last_4x ")"
 				zoom := 4.0
 			} else {
+				if (AdvZoom){
+					debug_line .= "4x - NO (" last_4x ")"
+				}
 				debug_line .= "1x Assumed"
 				zoom := 1.0
 			}
