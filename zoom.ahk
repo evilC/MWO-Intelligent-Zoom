@@ -753,6 +753,7 @@ calib_mode_changed(){
 		GuiControl,,BasicState,
 		GuiControl,,FiveState,
 		GuiControl,,ThreeState,
+		GuiControl,,FourState,
 
 	}
 }
