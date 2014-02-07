@@ -305,10 +305,24 @@ do_zoom(dir){
 	Global AdvZoomKey
 	Global zoom_waiting
 	Global current_zoom
+
+	if (dir == 1){
+		dirdesc := "(IN)"
+	} else {
+		dirdesc := "(OUT)"
+	}
 	
 	; Use a loop, so we can keep trying to acheive desired result
 	Loop, {
 		
+		debug_line := ""
+
+		if (desired_zoom){
+			debug_line .= "Expecting zoom: " desired_zoom ", "
+		} else {
+			ADHD.debug("=== NEW INPUT DETECTED " dirdesc " ===")
+		}
+
 		; Do the Pixel Detection to try and work out what zoom we are in now
 		current_zoom := which_zoom(get_zoom())
 		
@@ -317,12 +331,15 @@ do_zoom(dir){
 
 			if (desired_zoom){
 				; Zoom already in progress
-				ADHD.debug("Trying to reach zoom: " desired_zoom)
+				;ADHD.debug("Trying to reach zoom: " desired_zoom)
 
 				if (current_zoom != desired_zoom){
 					; Unexpected zoom
-					ADHD.debug("Expected zoom " desired_zoom ", got zoom " current_zoom " (Try #" tried_zoom ")")
+					;ADHD.debug("Expected zoom " desired_zoom ", got zoom " current_zoom " (Try #" tried_zoom ")")
+					debug_line .= "detected zoom " current_zoom " (Try #" tried_zoom "), "
 					if (tried_zoom <= 3){
+						debug_line .= "Trying again."
+						ADHD.debug(debug_line)
 						; Keep waiting for change
 						tried_zoom += 1
 						; Wait another 50ms and try again
@@ -332,7 +349,8 @@ do_zoom(dir){
 						; Tried 3 times and failed, give up.
 						desired_zoom := 0
 						tried_zoom := 0
-						ADHD.debug("Aborting")
+						debug_line .= "Aborting."
+						ADHD.debug(debug_line)
 						if (PlayDebugSounds){
 							soundbeep, 100, 100
 						}
@@ -341,8 +359,9 @@ do_zoom(dir){
 					}
 				} else {
 					; Desired zoom reached
-					ADHD.debug("Found Desired Zoom")
-					
+					debug_line .= "Found Desired Zoom"
+					ADHD.debug(debug_line)
+
 					desired_zoom := 0
 					tried_zoom := 0
 					break
@@ -397,19 +416,36 @@ do_zoom(dir){
 						}
 						z++
 					}
-					ADHD.debug("New Zoom Commenced: " ctr " times in dir " dir )
+					debug_line .= "New Zoom Commenced: " current_zoom "->" desired_zoom ": " ctr " zooms."
+					ADHD.debug(debug_line)
 					send_zoom(ctr)
 					continue
+				} else {
+					debug_line .= "Ignoring input."
+					ADHD.debug(debug_line)
+					break
 				}
+
+				; If it got this far, no known conditions met
+				debug_line .= "Unknown state - aborting."
+				ADHD.debug(debug_line)
+				break
 			}
 		} else {
+			debug_line .= "Zoom not detected. (Try #" tried_zoom "), "
 			; Zoom HUD indicator not read OK
 			if (tried_zoom <= 3){
+				debug_line .= "Trying again..."
+				ADHD.debug(debug_line)
+
 				tried_zoom += 1
 				; Wait another 50ms and try again
 				sleep, 50
 				continue
 			} else {
+				debug_line .= "Aborting."
+				ADHD.debug(debug_line)
+
 				desired_zoom := 0
 				tried_zoom := 0
 				if (PlayDebugSounds){
@@ -453,7 +489,7 @@ send_zoom(amt){
 	Global ZoomDelay
 	Global ADHD
 	
-	ADHD.debug("Sending Zoom key x" amt)
+	;ADHD.debug("Sending Zoom key x" amt)
 	Loop % amt {
 		Send {%ZoomKey%}
 		; This sleep is IMPORTANT. Not needed in Testing Grounds, but delay needed in match!
@@ -478,77 +514,111 @@ which_zoom(zm){
 get_zoom(){
 	global ADHD
 	Global AdvZoom
+	Global last_basic
+	Global last_1_5x
+	Global last_3x
+	Global last_4x
 	
+	debug_line := "Pixel Check: "
 	zoom := 0
-	if (mult_visible()){
-		if (is_3()){
+	if (check_basic()){
+		debug_line .= "Basic - OK (" last_basic "), "
+		if (check_3x()){
+			debug_line .= "3x - OK (" last_3x ")"
 			zoom := 3.0
-		} else if (is_5()){
+		} else if (check_1_5x()){
+			debug_line .= "3x - NO (" last_3x "), "
+			debug_line .= "1.5x - OK (" last_1_5x ")"
 			zoom := 1.5
 		} else {
-			if (AdvZoom && is_4()){
+			debug_line .= "3x - NO (" last_3x "), "
+			debug_line .= "1.5x - NO (" last_1_5x "), "
+			if (AdvZoom && check_4x()){
+				debug_line .= "4x - OK (" last_4x ")"
 				zoom := 4.0
 			} else {
+				debug_line .= "1x Assumed"
 				zoom := 1.0
 			}
 		}
+	} else {
+		debug_line .= "Basic - FAILED (" last_col ")"
 	}
-	ADHD.debug("`nDetected zoom: " zoom)
+	;ADHD.debug("`nDetected zoom: " zoom)
+	ADHD.debug(debug_line)
 	return zoom
 }
 
 ; Detects if x is present (is 1.0x, 1.5x or 3.0x likely to be visible?)
-; 1920x1200 = 1322,839
-mult_visible(){
+check_basic(){
+	Global last_col
+	Global last_basic
+
 	global BasicX
 	global BasicY
 	global BasicCol
 	global BasicTol
 	
-	return (pixel_check(BasicX,BasicY,BasicCol,BasicTol))
+	ret := (pixel_check(BasicX,BasicY,BasicCol,BasicTol))
+	last_basic := last_col
+	return ret
 }
 
 ; Detects between 1.5x and 1.0x
-; 1920x1200 = 1314,837
-is_5(){
+check_1_5x(){
+	Global last_col
+	Global last_1_5x
+
 	global FiveX
 	global FiveY
 	global FiveCol
 	global FiveTol
 	
-	return (pixel_check(FiveX,FiveY,FiveCol,FiveTol))
+	ret := (pixel_check(FiveX,FiveY,FiveCol,FiveTol))
+	last_1_5x := last_col
+	return ret
 }
 
 ; Detects if 3.0
-; 1920x1200 = 1302,837
-is_3(){
+check_3x(){
+	Global last_col
+	Global last_3x
+
 	global ThreeX
 	global ThreeY
 	global ThreeCol
 	global ThreeTol
 	
-	return (pixel_check(ThreeX,ThreeY,ThreeCol,ThreeTol))
+	ret := (pixel_check(ThreeX,ThreeY,ThreeCol,ThreeTol))
+	last_3x := last_col
+	return ret
 }
 
 ; Detects if 4.0 (Advanced Zoom)
-; 1920x1200 = 1300,838
-is_4(){
+check_4x(){
+	Global last_col
+	Global last_4x
+
 	global FourX
 	global FourY
 	global FourCol
 	global FourTol
 	
-	return (pixel_check(FourX,FourY,FourCol,FourTol))
+	ret := (pixel_check(FourX,FourY,FourCol,FourTol))
+	last_4x := last_col
+	return ret
 }
 
 ; Default colour is 0xF7AF36
 pixel_check(x,y,col,tol){
+	Global last_col
+
 	col := "0x" col
 	col := ToRGB(col)
 
 	;tim := A_TickCount
-	PixelGetColor, detected_color, %x%, %y%, RGB
-	det_obj := ToRGB(detected_color)
+	PixelGetColor, last_col, %x%, %y%, RGB
+	det_obj := ToRGB(last_col)
 	ret := Compare(det_obj,col,tol)
 	return ret
 	;out := ToRGB(det)
