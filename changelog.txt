@@ -6,6 +6,21 @@ Key:
 = : Change / Fix
 + : Added feature
 
+4.1 7th Feb 2014
+* Fixes for UI2.0 and some improvements
+= Simplified "Quick Start" instructions.
+! Due to font changes in UI2.0, pixel coordinates have changed.
+= New Default coordinates for 1080p - create a new profile or delete your INI file to get them.
+= Calibration Mode now makes many less pixel checks
+= Using zoom hotkeys in Calibration Mode now works (ie you can test in Calibration Mode)
++ Bindings added to quickly copy the colour from the Current to the Target box in Calibration Mode.
+  If you have good coordinates, this can be used to quickly configure colour values without having to use copy and paste.
+  Recommended bindings: Shift-F1 to Shift-F4
+= Vastly improved debug mode.
+  Improved layout
+  Gives pixel colour on failed detect
+= General under the hood optimizations
+
 4.0 10th Dec 2013
 = Reworked the method by which zooms are carried out.
   This version should be quicker in performing zooms.

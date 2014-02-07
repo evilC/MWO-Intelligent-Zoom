@@ -49,9 +49,13 @@ ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
 ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn"})
 ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut"})
 ADHD.config_hotkey_add({uiname: "Calibrate Basic", subroutine: "CalibrateBasic"})
+adhd_hk_k_3_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 ADHD.config_hotkey_add({uiname: "Calibrate 1.5x", subroutine: "Calibrate1_5x"})
+adhd_hk_k_4_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 ADHD.config_hotkey_add({uiname: "Calibrate 3.0x", subroutine: "Calibrate3x"})
+adhd_hk_k_5_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 ADHD.config_hotkey_add({uiname: "Calibrate 4x", subroutine: "Calibrate4x"})
+adhd_hk_k_6_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 
 ; Hook into ADHD events
 ; First parameter is name of event to hook into, second parameter is a function name to launch on that event
@@ -486,6 +490,7 @@ do_zoom(dir){
 					continue
 				} else {
 					debug_line .= "Ignoring input."
+					desired_zoom := 0
 					ADHD.debug(debug_line)
 					break
 				}
@@ -493,6 +498,7 @@ do_zoom(dir){
 				; If it got this far, no known conditions met
 				debug_line .= "Unknown state - aborting."
 				ADHD.debug(debug_line)
+				desired_zoom := 0
 				break
 			}
 		} else {
