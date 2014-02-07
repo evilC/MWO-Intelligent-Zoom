@@ -32,7 +32,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 4.0, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 4.1, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -544,12 +544,25 @@ is_4(){
 ; Default colour is 0xF7AF36
 pixel_check(x,y,col,tol){
 	col := "0x" col
+	col := ToRGB(col)
+
+	;tim := A_TickCount
+	PixelGetColor, detected_color, %x%, %y%, RGB
+	det_obj := ToRGB(detected_color)
+	ret := Compare(det_obj,col,tol)
+	return ret
+	;out := ToRGB(det)
+	;msgbox % Compare(out,cmp,10)
+	;msgbox % "PIXELGETCOLOR: " Compare(out,cmp,10) "(" det ")" "`nIn " A_TickCount - tim "ms"
+
+	/*
 	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, %col% , %tol%, Fast RGB
 	if Errorlevel {
 		return 0
 	} else {
 		return 1
 	}
+	*/
 }
 
 ; Hooks into the ADHD system	
@@ -609,6 +622,19 @@ set_always_on_top(){
 	} else {
 		Gui,-AlwaysOnTop
 	}
+}
+
+; Color manipulation and comparison functions
+ToRGB(color) {
+    return { "r": (color >> 16) & 0xFF, "g": (color >> 8) & 0xFF, "b": color & 0xFF }
+}
+
+Compare(c1, c2, vary=20) {
+    rdiff := Abs( c1.r - c2.r )
+    gdiff := Abs( c1.g - c2.g )
+    bdiff := Abs( c1.b - c2.b )
+
+    return rdiff <= vary && gdiff <= vary && bdiff <= vary
 }
 
 ; KEEP THIS AT THE END!!
