@@ -90,8 +90,8 @@ ADHD.gui_add("Edit", "BasicTol", "xp+20 yp W40", "", 10)
 Gui, Add, Text, xp+50 yp+3 W40 center vBasicState,
 
 Gui, Add, Text, x5 yp+25, 1.5
-ADHD.gui_add("Edit", "FiveX", "xp+30 yp-3 W40", "", 1314)
-ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 777)
+ADHD.gui_add("Edit", "FiveX", "xp+30 yp-3 W40", "", 1310)
+ADHD.gui_add("Edit", "FiveY", "xp+50 yp W40", "", 776)
 ADHD.gui_add("Edit", "FiveCol", "xp+50 yp W50", "", default_colour)
 Gui, Add, Text, xp+50 yp W20 center vFiveSetCol, ■
 Gui, Add, Edit, xp+20 yp W50 vFiveCurrent
