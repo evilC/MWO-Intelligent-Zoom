@@ -176,22 +176,30 @@ CalibModeChanged:
 	return
 
 CalibModeTimer:
+	CalibModeTimer()
+	return
+
+CalibModeTimer(){
+	Global calib_list
 	if WinActive("ahk_class CryENGINE"){
+		check_results := Array()
 		Loop, % calib_list.MaxIndex(){
 			tmpx := calib_list[A_Index] "X"
 			tmpy := calib_list[A_Index] "Y"
 			tmpx := %tmpx%
 			tmpy := %tmpy%
-			PixelGetColor, col, %tmpx%, %tmpy%, RGB
+			PixelGetColor, current_col, %tmpx%, %tmpy%, RGB
+
+			current_col_obj := current_col
 			
-			StringSplit, col, col, x
-			col := col2
+			StringSplit, current_col, current_col, x
+			current_col := current_col2
 			ctrl := calib_list[A_Index] "Current"
-			GuiControl,,%ctrl%, %col%
+			GuiControl,,%ctrl%, %current_col%
 
 			; Set swatches
 			swatch := calib_list[A_Index] "CurrentCol"
-			tmp := "+c" col
+			tmp := "+c" current_col
 			GuiControl, %tmp%, %swatch%
 			GuiControl,, %swatch%, ■
 			
@@ -199,28 +207,42 @@ CalibModeTimer:
 			tol := calib_list[A_Index] "Tol"
 			tol := %tol%
 			
-			col := calib_list[A_Index] "Col"
-			col := %col%
-			
-			state := pixel_check(tmpx,tmpy,col,10)
+			current_col_obj := ToRGB(current_col_obj)
+
+			target_col_obj := calib_list[A_Index] "Col"
+			target_col_obj := %target_col_obj%
+			target_col_obj := ToRGB("0x" target_col_obj)
+
+			state := Compare(current_col_obj,target_col_obj,tol)
+
+			check_results[A_Index] := state
+
+			;state := pixel_check(tmpx,tmpy,col,10)
 			ctrl := calib_list[A_Index] "State"
 			if (state){
 				GuiControl,,%ctrl%, YES
 			} else {
 				GuiControl,,%ctrl%, NO
 			}
-			
-			zoom := get_zoom()
-			
-			if (zoom == 0){
-				str := "Unknown"
+		}
+
+		; Detect zoom from this round of tests (Without doing extra pixel checks)
+		if (check_results[1]){
+			if (check_results[2]){
+				GuiControl,, CurrentZoom, 1.5x
+			} else if (check_results[3]){
+				GuiControl,, CurrentZoom, 3x
+			} else if (check_results[4]){
+				GuiControl,, CurrentZoom, 4x
 			} else {
-				str := zoom
+				GuiControl,, CurrentZoom, 1x
 			}
-			GuiControl,, CurrentZoom, %str%
+		} else {
+			GuiControl,, CurrentZoom, UNKNOWN
 		}
 	}
 	return
+}
 
 ; Called on zoom in/out keystroke and sets a variable when one is pressed.
 ; Main use is preventing jitter and unwanted multiple zoom requests when zoom is bound to the mouse wheel
@@ -324,7 +346,7 @@ do_zoom(dir){
 		}
 
 		; Do the Pixel Detection to try and work out what zoom we are in now
-		current_zoom := which_zoom(get_zoom())
+		current_zoom := which_zoom(get_zoom(false))
 		
 		if (current_zoom){
 			; Zoom HUD indicator successfully read, proceed
@@ -511,7 +533,7 @@ which_zoom(zm){
 }
 
 ; Operates the pixel detection routine to detect which numbers are visible in the Zoom Readout
-get_zoom(){
+get_zoom(calibmode){
 	global ADHD
 	Global AdvZoom
 	Global last_basic
@@ -545,7 +567,9 @@ get_zoom(){
 		debug_line .= "Basic - FAILED (" last_col ")"
 	}
 	;ADHD.debug("`nDetected zoom: " zoom)
-	ADHD.debug(debug_line)
+	if (!calibmode){
+		ADHD.debug(debug_line)
+	}
 	return zoom
 }
 
@@ -617,8 +641,9 @@ pixel_check(x,y,col,tol){
 	col := ToRGB(col)
 
 	;tim := A_TickCount
-	PixelGetColor, last_col, %x%, %y%, RGB
-	det_obj := ToRGB(last_col)
+	PixelGetColor, det_obj, %x%, %y%, RGB
+	last_col := det_obj
+	det_obj := ToRGB(det_obj)
 	ret := Compare(det_obj,col,tol)
 	return ret
 	;out := ToRGB(det)
@@ -671,7 +696,7 @@ calib_mode_changed(){
 	if (CalibMode){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
-		SetTimer, CalibModeTimer, 100
+		SetTimer, CalibModeTimer, 250
 	} else {
 		Guicontrol, +hidden, DetZoomLab
 		Guicontrol, +hidden, CurrentZoom
@@ -695,16 +720,19 @@ set_always_on_top(){
 }
 
 ; Color manipulation and comparison functions
+; Converts hex ("0xFFFFFF" as a string) to an object of r/g/b integers
 ToRGB(color) {
     return { "r": (color >> 16) & 0xFF, "g": (color >> 8) & 0xFF, "b": color & 0xFF }
 }
 
-Compare(c1, c2, vary=20) {
+; Compares r/g/b integer objects, with a tolerance
+; returns true or false
+Compare(c1, c2, tol := 20) {
     rdiff := Abs( c1.r - c2.r )
     gdiff := Abs( c1.g - c2.g )
     bdiff := Abs( c1.b - c2.b )
 
-    return rdiff <= vary && gdiff <= vary && bdiff <= vary
+    return rdiff <= tol && gdiff <= tol && bdiff <= tol
 }
 
 ; KEEP THIS AT THE END!!
