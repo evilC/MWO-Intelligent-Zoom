@@ -172,14 +172,10 @@ return
 
 ZoomIn:
 	process_input(1)
-	;zoom_waiting := 1
-	;do_zoom(1, A_TickCount)
 	return
 	
 ZoomOut:
 	process_input(-1)
-	;zoom_waiting := -1
-	;do_zoom(-1, A_TickCount)
 	return
 
 CalibModeChanged:	
@@ -192,22 +188,18 @@ CalibModeTimer:
 
 CalibrateBasic:
 	calibrate_colour("Basic")
-	;CalibrateBasic()
 	return
 
 Calibrate1_5x:
 	calibrate_colour("Five")
-	;Calibrate1_5x()
 	return
 
 Calibrate3x:
 	calibrate_colour("Three")
-	;Calibrate3x()
 	return
 
 Calibrate4x:
 	calibrate_colour("Four")
-	;Calibrate4x()
 	return
 
 ; Functions
@@ -253,7 +245,6 @@ CalibModeTimer(){
 
 			check_results[A_Index] := state
 
-			;state := pixel_check(tmpx,tmpy,col,10)
 			ctrl := calib_list[A_Index] "State"
 			if (state){
 				GuiControl,,%ctrl%, YES
@@ -683,18 +674,6 @@ pixel_check(x,y,col,tol){
 	det_obj := ToRGB(det_obj)
 	ret := Compare(det_obj,col,tol)
 	return ret
-	;out := ToRGB(det)
-	;msgbox % Compare(out,cmp,10)
-	;msgbox % "PIXELGETCOLOR: " Compare(out,cmp,10) "(" det ")" "`nIn " A_TickCount - tim "ms"
-
-	/*
-	PixelSearch, outx, outy, %x%, %y%, %x%, %y%, %col% , %tol%, Fast RGB
-	if Errorlevel {
-		return 0
-	} else {
-		return 1
-	}
-	*/
 }
 
 ; Hooks into the ADHD system	
