@@ -63,6 +63,7 @@ adhd_hk_k_6_TT := "Will copy the colour from the Current to the Target box in Ca
 ADHD.config_event("app_active", "app_active_hook")
 ADHD.config_event("app_inactive", "app_inactive_hook")
 ADHD.config_event("option_changed", "option_changed_hook")
+ADHD.config_event("tab_changed", "tab_changed_hook")
 
 ADHD.init()
 
@@ -704,12 +705,18 @@ option_changed_hook(){
 	calib_mode_changed()
 }
 
+tab_changed_hook(){
+	calib_mode_changed()
+}
+
 ; Enable / Diable Calibration Mode
 calib_mode_changed(){
 	global CalibMode
+	Global adhd_current_tab
+
 	gui, submit, nohide
 	
-	if (CalibMode){
+	if (CalibMode && adhd_current_tab == "Main"){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
 		SetTimer, CalibModeTimer, 250
