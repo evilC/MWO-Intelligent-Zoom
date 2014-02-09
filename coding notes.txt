@@ -1,0 +1,113 @@
+Musings on (semi) automatically detecting pixel coords for MWO Intelligent Zoom
+
+Using my res (1920x1200, 16:10) as a basis, can I work out maths to calculate the same point in the zoom readout for different resolutions?
+Basic idea:
+HUD appears centered on the screen and scaled in x/y by an amount proportionate to the HORIZONTAL res.
+ie hud is same size and same relative offset in 1920x1200 and 1920x1080
+
+Therefore, if we know the offset of one pixel from the center of the screen for one resolution, we can calculate it for another.
+We do this by finding the proportion of screen width to the pixel coordinate's offset from center screen (always the width - ratio of x coord to width, y coord to width also)
+
+RESOLUTIONS
+===========
+(Basic is center of dot in 1.0)
+
+1920x1200 (16:10) - Reference resolution
+
+centre = 960x600
+
+basic = 1305,842
+basic (center offset) = 345,242 <-- same: vertical res irrelivant
+5 = 1313,835
+3 = 1295,842
+4 = 1296,835
+
+================
+1920x1080 (16:9)
+
+centre = 960x540
+
+basic = 1305,782
+basic(center offset) = 345,242 <-- same: vertical res irrelivant
+
+================
+1680x1050 (16:10)
+
+centre = 840,525
+
+basic = 1142,737
+basic(center offset) = 302,212
+
+==================
+1360x768 (16:9.035294117647059)
+
+centre = 680x384
+
+basic = 924,555
+basic(center offset) = 244,171
+
+============================================
+
+1920 (16:19 or 16:10)
+basic x offset: 345
+half width: 960
+basic y offset: 242
+960/345 = 2.7826086957
+960/242 = 3.9669421488
+
+1680 (16:10 tested)
+basic x offset: 302
+half width: 840
+basic y offset: 212
+840/302 = 2.7814569536
+
+1360 (16:9.035294117647059 tested - 768)
+basic x offset: 244
+half width: 680
+basic y offset: 171
+half height: 384
+680/244 = 2.7868852459
+
+basic x offset: 
+basic y offset: 
+
+=======================================
+Ratio based tests
+1920(x): 960 / 2.782608695652174 = 345 = GOOD
+1680(x): 840 / 2.782608695652174 = 301.875 = 302 GOOD
+1360(x): 680 / 2.782608695652174 = 244.375 = 244 = GOOD
+
+1920(y): 960 / 3.9669421488 = 241.999999998 = 242 = GOOD
+1680(y): 840 / 3.9669421488 = 211.749999998 = 212 = GOOD
+1360(y): 680 / 3.9669421488 = 171.416666665 = 171 = GOOD
+
+Formula V2
+x:
+(half_width / 2.782608695652174) + half_width = coord
+(half_width / 2.7826086957) + half_width = coord
+(half_width / <coord x ratio>) + half_width = coord
+(680 / 2.782608695652174) + 680 = 924.375 = 924
+(680 / 2.7826086957) + 680 = 924.374999996 = 924
+(1280 / 2.782608695652174) + 1280 = 1740
+
+y:
+(half_width / 3.9669421488) + half_height = coord
+(half_width / <coord y ratio>) + half_height = coord
+(680 / 3.9669421488) + 384 = 555.416666665 = 555
+(1280 / 3.9669421488) + 800 = 1122.66666666 == 1123
+
+Ratios:
+-------
+x ratio:
+half_width / (x_coord - half_width)
+basic: 960 / (1305 - 960) = 2.7826086957
+1.5x:  960 / (1313 - 960) = 2.7195467422
+3.0x:  960 / (1295 - 960) = 2.8656716418
+4.0x:  960 / (1296 - 960) = 2.8571428571
+
+y: ratio:
+half_width / (y_coord - half_height)
+basic: 960 / (842 - 600) = 3.9669421488
+1.5x:  960 / (835 - 600) = 4.085106383
+3.0x:  960 / (842 - 600) = 3.9669421488
+4.0x:  960 / (835 - 600) = 4.085106383

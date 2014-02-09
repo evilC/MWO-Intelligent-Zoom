@@ -33,7 +33,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 4.1, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 4.2, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -128,7 +128,9 @@ Gui, Add, Text, xp+50 yp+3 W40 center vFourState,
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
 Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
 
-Gui, Add, Text, x5 yp+25, MWO Keys: Zoom
+Gui, Add, Button, xp+100 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
+
+Gui, Add, Text, x5 yp+30, MWO Keys: Zoom
 ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W30", "", "z")
 ZoomKey_TT := "The key bound to Zoom in MWO"
 
@@ -201,6 +203,10 @@ Calibrate3x:
 
 Calibrate4x:
 	calibrate_colour("Four")
+	return
+
+DetectCoordinates:
+	detect_coordinates()
 	return
 
 ; Functions
@@ -281,6 +287,78 @@ calibrate_colour(colour){
 		GuiControl,,%colour%Col, %tmp%
 		soundbeep
 	}
+}
+
+; Tries to work out coordinates to use based upon a mathematical formula
+detect_coordinates(){
+	Global ADHD
+	global adhd_limit_application_on
+	global adhd_limit_application
+	global calib_list
+
+	if (!adhd_limit_application_on){
+		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
+		return
+	}
+	StringCaseSense, On
+	if (adhd_limit_application != "CryENGINE"){
+		msgbox The "Limit to Application" option in the Bindings tab must be set to "CryENGINE" (No Quotes, CaSe SenSITive).
+		StringCaseSense, Off
+		return
+	}
+	StringCaseSense, Off
+
+	curr_size := ADHD.limit_app_get_size()
+	if (curr_size.h == -1){
+		msgbox "Resolution not detected - please open the game, then try again."
+		return
+	}
+
+	msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
+
+	IfMsgBox, No
+		return
+
+	; pixel ratios. Calculated from a known good (hand picked) coordinate - should be the same for all resolutions.
+	; x: half_width / (x_coord - half_width)
+	; y: half_width / (y_coord - half_height)
+	x_ratio := Array()
+	y_ratio := Array()
+
+	x_ratio[1] := 2.7826086957
+	y_ratio[1] := 3.9669421488
+
+	x_ratio[2] := 2.7195467422
+	y_ratio[2] := 4.085106383
+
+	x_ratio[3] := 2.8656716418
+	y_ratio[3] := 3.9669421488
+
+	x_ratio[4] := 2.8571428571
+	y_ratio[4] := 4.085106383
+
+	half_width := round(curr_size.w / 2)
+	half_height := round(curr_size.h / 2)
+
+	x_coord := Array()
+	y_coord := Array()
+
+	Loop, 4 {
+		x_coord[A_Index] := round((half_width / x_ratio[A_Index]) + half_width)
+		y_coord[A_Index] := round((half_width / y_ratio[A_Index]) + half_height)
+	}
+
+	arr := Array("X","Y")
+	Loop, 4 {
+		ctr := A_Index
+		Loop, 2 {
+			axis := arr[A_Index]
+			val := %axis%_coord[ctr]
+			ctrl := calib_list[ctr] axis
+			GuiControl,,%ctrl%, %val%
+		}
+	}
+
 }
 
 ; Called on zoom in/out keystroke and sets a variable when one is pressed.
@@ -719,6 +797,7 @@ calib_mode_changed(){
 	if (CalibMode && adhd_current_tab == "Main"){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
+		Guicontrol, -hidden, DetectCoordinates
 		SetTimer, CalibModeTimer, 250
 	} else {
 		Guicontrol, +hidden, DetZoomLab
@@ -728,7 +807,7 @@ calib_mode_changed(){
 		GuiControl,,FiveState,
 		GuiControl,,ThreeState,
 		GuiControl,,FourState,
-
+		GuiControl, +hidden,DetectCoordinates
 	}
 }
 

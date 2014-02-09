@@ -6,6 +6,11 @@ Key:
 = : Change / Fix
 + : Added feature
 
+4.2 9th Feb 2014
+= Calibration mode UI elements should now hide properly when not in calibration mode, or on another tab.
++ Experimental Detect Coordinates feature - button shows when in Calibration Mode.
+  Uses maths to work out where the pixels should be.
+
 4.1 7th Feb 2014
 * Fixes for UI2.0 and some improvements
 = Simplified "Quick Start" instructions.
