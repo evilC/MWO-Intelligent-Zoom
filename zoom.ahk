@@ -55,7 +55,7 @@ ADHD.config_hotkey_add({uiname: "Calibrate 1.5x", subroutine: "Calibrate1_5x"})
 adhd_hk_k_4_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 ADHD.config_hotkey_add({uiname: "Calibrate 3.0x", subroutine: "Calibrate3x"})
 adhd_hk_k_5_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
-ADHD.config_hotkey_add({uiname: "Calibrate 4x", subroutine: "Calibrate4x"})
+ADHD.config_hotkey_add({uiname: "Calibrate 4.0x (Adv)", subroutine: "Calibrate4x"})
 adhd_hk_k_6_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
 
 ; Hook into ADHD events

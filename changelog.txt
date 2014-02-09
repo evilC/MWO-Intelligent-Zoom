@@ -8,6 +8,7 @@ Key:
 
 4.2 9th Feb 2014
 = Calibration mode UI elements should now hide properly when not in calibration mode, or on another tab.
+= Change label for Calibrate 4x
 + Experimental Detect Coordinates feature - button shows when in Calibration Mode.
   Uses maths to work out where the pixels should be.
 
