@@ -14,6 +14,9 @@ ADHD.run_as_admin()
 ; Set up vars
 tried_zoom := 0
 calib_list := Array("Basic","Five","Three","Four")
+axis_list := Array("X","Y")
+pixel_detect_start := 0
+pixel_detect_size := 0
 zoom_rates := Array(1.0,1.5,3.0,4.0)
 zoom_sequence := Array(1,2,3,1,2)
 default_colour := "F7AF36"
@@ -129,6 +132,7 @@ Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom:
 Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
 
 Gui, Add, Button, xp+100 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
+Gui, Add, Text, 0xE xp+120 yp+2 w50 h25 hwndhPic          ; SS_Bitmap    = 0xE
 
 Gui, Add, Text, x5 yp+30, MWO Keys: Zoom
 ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W30", "", "z")
@@ -172,6 +176,36 @@ return
 
 ; Hotkey Subroutines
 ; =================================================
+
+;Shows a section of screen 
+ShowSnapshot:
+	pToken  := Gdip_Startup()
+
+	tim := A_TickCount
+
+	pBitMap := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
+	;pBitMap := GDIP_BitmapFromScreen("300|300|200|200")
+
+	tim := A_TickCount - tim
+
+	hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
+
+	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
+
+	pgcx := coords[1,1]
+	pgcy := coords[1,2]
+	PixelGetColor, current_col, %pgcx%, %pgcy%, RGB
+
+	xpos := coords[1,1] - min[1]
+	ypos := coords[1,2] - min[2]
+
+	;ARGB := GDIP_GetPixel(pbitmap, "0", "0")
+	ARGB := GDIP_GetPixel(pbitmap, xpos, ypos)
+	tmp := ARGBtoRGB(ARGB)
+	;msgbox % xpos "," ypos ": " tmp "(PixelGetColor says: " current_col ") in " tim "ms"
+
+	Gdip_DisposeImage(pBitmap)
+	return
 
 ZoomIn:
 	process_input(1)
@@ -274,6 +308,8 @@ CalibModeTimer(){
 		} else {
 			GuiControl,, CurrentZoom, UNKNOWN
 		}
+
+		Gosub, ShowSnapshot
 	}
 	return
 }
@@ -295,6 +331,7 @@ detect_coordinates(){
 	global adhd_limit_application_on
 	global adhd_limit_application
 	global calib_list
+	global axis_list
 
 	if (!adhd_limit_application_on){
 		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
@@ -348,11 +385,11 @@ detect_coordinates(){
 		y_coord[A_Index] := round((half_width / y_ratio[A_Index]) + half_height)
 	}
 
-	arr := Array("X","Y")
+	
 	Loop, 4 {
 		ctr := A_Index
 		Loop, 2 {
-			axis := arr[A_Index]
+			axis := axis_list[A_Index]
 			val := %axis%_coord[ctr]
 			ctrl := calib_list[ctr] axis
 			GuiControl,,%ctrl%, %val%
@@ -781,6 +818,8 @@ option_changed_hook(){
 			
 	set_always_on_top()
 	calib_mode_changed()
+
+	rebuild_coordcache()
 }
 
 tab_changed_hook(){
@@ -822,6 +861,44 @@ set_always_on_top(){
 	}
 }
 
+; Calculates size and position of a box that covers all the coordinates
+rebuild_coordcache(){
+	global calib_list
+	global axis_list
+	global pixel_detect_start
+	global pixel_detect_size
+
+	coords := object()
+	min := Array(999999,999999)
+	max := Array(0,0)
+
+	Loop, 4 {
+		ctr := A_Index
+		coords.insert([])
+		Loop, 2 {
+			axis := axis_list[A_Index]
+			val := %axis%_coord[ctr]
+			ctrl := calib_list[ctr] axis
+			GuiControlGet,%ctrl%
+			coords[ctr,A_Index] := %ctrl%
+
+			if (coords[ctr,A_Index] < min[A_Index]){
+				min[A_Index] := coords[ctr,A_Index]
+			}
+			if (coords[ctr,A_Index] > max[A_Index]){
+				max[A_Index] := coords[ctr,A_Index]
+			}
+		}
+	}
+	;pixel_detect_size := Array((max[1] - min[1]) + 1, (max[2] - min[2]) + 1)
+
+	;if possible, pass back a box of 5px around the coords
+	if (min[1] > 5 && min[2] > 5){
+		pixel_detect_start := Array(min[1] - 5,min[2] - 5)
+	}
+	pixel_detect_size := Array((max[1] - min[1]) + 11, (max[2] - min[2]) + 11)
+}
+
 ; Color manipulation and comparison functions
 ; Converts hex ("0xFFFFFF" as a string) to an object of r/g/b integers
 ToRGB(color) {
@@ -838,6 +915,17 @@ Compare(c1, c2, tol := 20) {
     return rdiff <= tol && gdiff <= tol && bdiff <= tol
 }
 
+ARGBtoRGB( ARGB ){
+	SetFormat, IntegerFast, hex
+	ARGB := ARGB & 0x00ffffff
+	ARGB .= ""  ; Necessary due to the "fast" mode.
+	SetFormat, IntegerFast, d
+	return ARGB
+}
+
 ; KEEP THIS AT THE END!!
 ;#Include ADHDLib.ahk		; If you have the library in the same folder as your macro, use this
 #Include <ADHDLib>			; If you have the library in the Lib folder (C:\Program Files\Autohotkey\Lib), use this
+
+#Include <Gdip>			; http://www.autohotkey.com/board/topic/29449-gdi-standard-library-145-by-tic/
+;#Include Gdip.ahk
