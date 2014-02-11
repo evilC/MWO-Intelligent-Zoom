@@ -67,6 +67,7 @@ ADHD.config_event("app_active", "app_active_hook")
 ADHD.config_event("app_inactive", "app_inactive_hook")
 ADHD.config_event("option_changed", "option_changed_hook")
 ADHD.config_event("tab_changed", "tab_changed_hook")
+ADHD.config_event("on_exit", "on_exit_hook")
 
 ADHD.init()
 
@@ -167,6 +168,7 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 ; End GUI creation section
 ; ============================================================================================
 
+pToken := Gdip_Startup()
 
 ADHD.finish_startup()
 
@@ -176,37 +178,53 @@ return
 
 ; Hotkey Subroutines
 ; =================================================
+; Gets colour of a pixel relative to the snapshot
+snapshot_get_color(xpos,ypos){
+	global snapshot_bmp
 
-;Shows a section of screen 
-ShowSnapshot:
-	pToken  := Gdip_Startup()
+	ret := GDIP_GetPixel(snapshot_bmp, xpos, ypos)
+	ret := ARGBtoRGB(ret)
+	return ret
+}
 
-	tim := A_TickCount
+; Gets colour of a pixel relative to the screen
+pixel_get_color(xpos, ypos){
+	global pixel_detect_start
 
-	pBitMap := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
-	;pBitMap := GDIP_BitmapFromScreen("300|300|200|200")
+	PixelGetColor, current_col, %xpos%, %ypos%, RGB
 
-	tim := A_TickCount - tim
+	xpos := xpos - pixel_detect_start[1]
+	ypos := ypos - pixel_detect_start[2]
 
-	hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
+	ret := snapshot_get_color(xpos,ypos)
 
-	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
+	msgbox % xpos "," ypos ": " ret "(PixelGetColor says: " current_col ")"
+	return ret
+}
 
-	/*
-	pgcx := coords[1,1]
-	pgcy := coords[1,2]
-	PixelGetColor, current_col, %pgcx%, %pgcy%, RGB
+take_snapshot(){
+	global snapshot_bmp
+	global pixel_detect_start
+	global pixel_detect_size
 
-	xpos := coords[1,1] - min[1]
-	ypos := coords[1,2] - min[2]
-
-	;ARGB := GDIP_GetPixel(pbitmap, "0", "0")
-	ARGB := GDIP_GetPixel(pbitmap, xpos, ypos)
-	tmp := ARGBtoRGB(ARGB)
-	;msgbox % xpos "," ypos ": " tmp "(PixelGetColor says: " current_col ") in " tim "ms"
-	*/
-	Gdip_DisposeImage(pBitmap)
+	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
+	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
 	return
+}
+
+~mbutton::
+	pixel_get_color("1305","842")
+	return
+
+;Shows the snapshot area in the gui
+show_snapshot(){
+	global snapshot_bmp
+	global hPic
+
+	hBitmap := Gdip_CreateHBITMAPFromBitmap(snapshot_bmp)
+	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
+	return
+}
 
 ZoomIn:
 	process_input(1)
@@ -309,8 +327,8 @@ CalibModeTimer(){
 		} else {
 			GuiControl,, CurrentZoom, UNKNOWN
 		}
-
-		Gosub, ShowSnapshot
+		take_snapshot()
+		show_snapshot()
 	}
 	return
 }
@@ -827,6 +845,15 @@ tab_changed_hook(){
 	calib_mode_changed()
 }
 
+on_exit_hook(){
+	global snapshot_bmp
+	global pToken
+
+	Gdip_DisposeImage(snapshot_bmp)
+	Gdip_ShutDown(pToken)
+	return
+}
+
 ; Enable / Diable Calibration Mode
 calib_mode_changed(){
 	global CalibMode
@@ -896,8 +923,12 @@ rebuild_coordcache(){
 	;if possible, pass back a box of 5px around the coords
 	if (min[1] > 5 && min[2] > 5){
 		pixel_detect_start := Array(min[1] - 5,min[2] - 5)
+		pixel_detect_size := Array((max[1] - min[1]) + 11, (max[2] - min[2]) + 11)
+	} else {
+		pixel_detect_start := Array(min[1],min[2])
+		;Add 1 so we alwats get at least 1 pixel
+		pixel_detect_size := Array((max[1] - min[1]) + 1, (max[2] - min[2]) + 1)
 	}
-	pixel_detect_size := Array((max[1] - min[1]) + 11, (max[2] - min[2]) + 11)
 }
 
 ; Color manipulation and comparison functions
