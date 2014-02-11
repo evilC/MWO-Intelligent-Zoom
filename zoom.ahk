@@ -192,6 +192,7 @@ ShowSnapshot:
 
 	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
 
+	/*
 	pgcx := coords[1,1]
 	pgcy := coords[1,2]
 	PixelGetColor, current_col, %pgcx%, %pgcy%, RGB
@@ -203,7 +204,7 @@ ShowSnapshot:
 	ARGB := GDIP_GetPixel(pbitmap, xpos, ypos)
 	tmp := ARGBtoRGB(ARGB)
 	;msgbox % xpos "," ypos ": " tmp "(PixelGetColor says: " current_col ") in " tim "ms"
-
+	*/
 	Gdip_DisposeImage(pBitmap)
 	return
 
