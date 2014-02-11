@@ -130,10 +130,12 @@ ADHD.gui_add("Edit", "FourTol", "xp+20 yp W40", "", default_tol)
 Gui, Add, Text, xp+50 yp+3 W40 center vFourState,
 
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
-Gui, Add, Text, xp+100 yp W80 vCurrentZoom,
+Gui, Add, Text, xp+100 yp W30 vCurrentZoom,
 
-Gui, Add, Button, xp+100 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
-Gui, Add, Text, 0xE xp+120 yp+2 w50 h25 hwndhPic          ; SS_Bitmap    = 0xE
+Gui, Add, Button, xp+50 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
+
+Gui, Add, Text, xp+110 yp+5 W40 center vSnapshotLab, SnapShot:
+Gui, Add, Text, 0xE xp+60 yp-5 w50 h25 hwndhPic vSnapshot          ; SS_Bitmap    = 0xE
 
 Gui, Add, Text, x5 yp+30, MWO Keys: Zoom
 ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W30", "", "z")
@@ -277,10 +279,10 @@ CalibModeTimer(){
 				GuiControl,, CurrentZoom, 1x
 			}
 		} else {
-			GuiControl,, CurrentZoom, UNKNOWN
+			GuiControl,, CurrentZoom, ???
 		}
 		take_snapshot()
-		show_snapshot()
+		;show_snapshot()
 	}
 	return
 }
@@ -824,6 +826,9 @@ calib_mode_changed(){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
 		Guicontrol, -hidden, DetectCoordinates
+		GuiControl, -hidden,Snapshot
+		GuiControl, -hidden,SnapshotLab
+
 		SetTimer, CalibModeTimer, 250
 	} else {
 		Guicontrol, +hidden, DetZoomLab
@@ -834,6 +839,8 @@ calib_mode_changed(){
 		GuiControl,,ThreeState,
 		GuiControl,,FourState,
 		GuiControl, +hidden,DetectCoordinates
+		GuiControl, +hidden,Snapshot
+		GuiControl, +hidden,SnapshotLab
 	}
 }
 
@@ -919,9 +926,13 @@ take_snapshot(){
 	global snapshot_bmp
 	global pixel_detect_start
 	global pixel_detect_size
+	global CalibMode
 
 	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
 	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
+	if (CalibMode){
+		show_snapshot()
+	}
 	return
 }
 
