@@ -36,7 +36,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: 4.2, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: 4.3, author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_default_app("CryENGINE")
@@ -178,53 +178,6 @@ return
 
 ; Hotkey Subroutines
 ; =================================================
-; Gets colour of a pixel relative to the snapshot
-snapshot_get_color(xpos,ypos){
-	global snapshot_bmp
-
-	ret := GDIP_GetPixel(snapshot_bmp, xpos, ypos)
-	ret := ARGBtoRGB(ret)
-	return ret
-}
-
-; Gets colour of a pixel relative to the screen
-pixel_get_color(xpos, ypos){
-	global pixel_detect_start
-
-	PixelGetColor, current_col, %xpos%, %ypos%, RGB
-
-	xpos := xpos - pixel_detect_start[1]
-	ypos := ypos - pixel_detect_start[2]
-
-	ret := snapshot_get_color(xpos,ypos)
-
-	msgbox % xpos "," ypos ": " ret "(PixelGetColor says: " current_col ")"
-	return ret
-}
-
-take_snapshot(){
-	global snapshot_bmp
-	global pixel_detect_start
-	global pixel_detect_size
-
-	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
-	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
-	return
-}
-
-~mbutton::
-	pixel_get_color("1305","842")
-	return
-
-;Shows the snapshot area in the gui
-show_snapshot(){
-	global snapshot_bmp
-	global hPic
-
-	hBitmap := Gdip_CreateHBITMAPFromBitmap(snapshot_bmp)
-	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
-	return
-}
 
 ZoomIn:
 	process_input(1)
@@ -276,9 +229,10 @@ CalibModeTimer(){
 			tmpy := calib_list[A_Index] "Y"
 			tmpx := %tmpx%
 			tmpy := %tmpy%
-			PixelGetColor, current_col, %tmpx%, %tmpy%, RGB
+			;PixelGetColor, current_col, %tmpx%, %tmpy%, RGB
+			current_col := pixel_get_color(tmpx,tmpy)
 
-			current_col_obj := current_col
+			current_col_obj := ToRGB(current_col)
 			
 			StringSplit, current_col, current_col, x
 			current_col := current_col2
@@ -295,8 +249,6 @@ CalibModeTimer(){
 			tol := calib_list[A_Index] "Tol"
 			tol := %tol%
 			
-			current_col_obj := ToRGB(current_col_obj)
-
 			target_col_obj := calib_list[A_Index] "Col"
 			target_col_obj := %target_col_obj%
 			target_col_obj := ToRGB("0x" target_col_obj)
@@ -701,6 +653,11 @@ get_zoom(calibmode){
 	Global last_3x
 	Global last_4x
 	
+	; Take a new snapshot for comparisons
+	if (!calibmode){
+		take_snapshot()
+	}
+
 	debug_line := "Pixel Check: "
 	zoom := 0
 	if (check_basic()){
@@ -804,7 +761,9 @@ pixel_check(x,y,col,tol){
 	col := ToRGB(col)
 
 	;tim := A_TickCount
-	PixelGetColor, det_obj, %x%, %y%, RGB
+	;PixelGetColor, det_obj, %x%, %y%, RGB
+	det_obj := pixel_get_color(x,y)
+
 	last_col := det_obj
 	det_obj := ToRGB(det_obj)
 	ret := Compare(det_obj,col,tol)
@@ -929,6 +888,51 @@ rebuild_coordcache(){
 		;Add 1 so we alwats get at least 1 pixel
 		pixel_detect_size := Array((max[1] - min[1]) + 1, (max[2] - min[2]) + 1)
 	}
+}
+
+; GDI+ Functions
+; Gets colour of a pixel relative to the snapshot
+snapshot_get_color(xpos,ypos){
+	global snapshot_bmp
+
+	ret := GDIP_GetPixel(snapshot_bmp, xpos, ypos)
+	ret := ARGBtoRGB(ret)
+	return ret
+}
+
+; Gets colour of a pixel relative to the screen
+pixel_get_color(xpos, ypos){
+	global pixel_detect_start
+
+	PixelGetColor, current_col, %xpos%, %ypos%, RGB
+
+	xpos := xpos - pixel_detect_start[1]
+	ypos := ypos - pixel_detect_start[2]
+
+	ret := snapshot_get_color(xpos,ypos)
+
+	;msgbox % xpos "," ypos ": " ret "(PixelGetColor says: " current_col ")"
+	return ret
+}
+
+take_snapshot(){
+	global snapshot_bmp
+	global pixel_detect_start
+	global pixel_detect_size
+
+	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
+	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
+	return
+}
+
+;Shows the snapshot area in the gui
+show_snapshot(){
+	global snapshot_bmp
+	global hPic
+
+	hBitmap := Gdip_CreateHBITMAPFromBitmap(snapshot_bmp)
+	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
+	return
 }
 
 ; Color manipulation and comparison functions
