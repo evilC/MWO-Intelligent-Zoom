@@ -483,6 +483,8 @@ do_zoom(dir){
 						ADHD.debug("----------------------------------------------")
 						if (PlayDebugSounds){
 							soundbeep, 100, 100
+							sleep, 25
+							soundbeep, 100, 100
 						}
 						; Stop trying
 						break
@@ -565,6 +567,13 @@ do_zoom(dir){
 
 				; If it got this far, no known conditions met
 				debug_line .= "Aborting - Unknown State."
+
+				soundbeep, 100, 100
+				sleep, 25
+				soundbeep, 100, 100
+				sleep, 25
+				soundbeep, 100, 100
+
 				ADHD.debug(debug_line)
 				ADHD.debug("----------------------------------------------")
 				desired_zoom := 0
