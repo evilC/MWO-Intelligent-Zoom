@@ -12,7 +12,6 @@ ADHD.run_as_admin()
 #MaxHotkeysPerInterval 999
 
 ; Set up vars
-tried_zoom := 0
 calib_list := Array("Basic","Five","Three","Four")
 axis_list := Array("X","Y")
 pixel_detect_start := 0
@@ -430,7 +429,6 @@ do_zoom(dir){
 	Global PlayDebugSounds
 	Global zoom_rates
 	Global desired_zoom
-	Global tried_zoom
 	Global zoom_tick_time
 	Global zoom_tick_dir
 	Global ADHD
@@ -446,19 +444,19 @@ do_zoom(dir){
 		dirdesc := "(OUT)"
 	}
 	
+	ADHD.debug("=== NEW INPUT DETECTED " dirdesc " ===")
+
+	tried_zoom := 0
+
 	; Use a loop, so we can keep trying to acheive desired result
 	Loop, {
 		
 		debug_line := ""
 
-		if (desired_zoom){
-			debug_line .= "Expecting zoom: " desired_zoom ", "
-		} else {
-			ADHD.debug("=== NEW INPUT DETECTED " dirdesc " ===")
-		}
-
 		; Do the Pixel Detection to try and work out what zoom we are in now
 		current_zoom := which_zoom(get_zoom(false))
+
+		tried_zoom++
 		
 		if (current_zoom){
 			; Zoom HUD indicator successfully read, proceed
@@ -470,21 +468,19 @@ do_zoom(dir){
 				if (current_zoom != desired_zoom){
 					; Unexpected zoom
 					;ADHD.debug("Expected zoom " desired_zoom ", got zoom " current_zoom " (Try #" tried_zoom ")")
-					debug_line .= "detected zoom " current_zoom " (Try #" tried_zoom "), "
-					if (tried_zoom <= 3){
+					debug_line .= "Expecting zoom " desired zoom ", detected zoom " current_zoom " (Try #" tried_zoom "), "
+					if (tried_zoom < 3){
 						debug_line .= "Trying again."
 						ADHD.debug(debug_line)
-						; Keep waiting for change
-						tried_zoom += 1
 						; Wait another 50ms and try again
 						sleep, 50
 						continue
 					} else {
 						; Tried 3 times and failed, give up.
 						desired_zoom := 0
-						tried_zoom := 0
-						debug_line .= "Aborting."
+						debug_line .= "Aborting - Unexpected Zoom."
 						ADHD.debug(debug_line)
+						ADHD.debug("----------------------------------------------")
 						if (PlayDebugSounds){
 							soundbeep, 100, 100
 						}
@@ -495,9 +491,10 @@ do_zoom(dir){
 					; Desired zoom reached
 					debug_line .= "Found Desired Zoom"
 					ADHD.debug(debug_line)
+					ADHD.debug("----------------------------------------------")
 
 					desired_zoom := 0
-					tried_zoom := 0
+
 					break
 				}
 			} else {
@@ -525,6 +522,8 @@ do_zoom(dir){
 						dir == -1
 					} else if (AdvZoomMinMax && current_zoom != 4 && dir == -1){
 						; Send Advanced zoom on zoom out option
+						ADHD.debug("Triggering Advanced Zoom on Wheel Out")
+						ADHD.debug("----------------------------------------------")
 						send_adv_zoom()
 						break
 					}
@@ -532,6 +531,8 @@ do_zoom(dir){
 
 				if (current_zoom == 4){
 					; zooming while in advanced zoom exits adv zoom by zooming.
+					ADHD.debug("Exiting Advanced Zoom")
+					ADHD.debug("----------------------------------------------")
 					send_adv_zoom()
 					break
 				} else {
@@ -558,32 +559,33 @@ do_zoom(dir){
 					debug_line .= "Ignoring input."
 					desired_zoom := 0
 					ADHD.debug(debug_line)
+					ADHD.debug("----------------------------------------------")
 					break
 				}
 
 				; If it got this far, no known conditions met
-				debug_line .= "Unknown state - aborting."
+				debug_line .= "Aborting - Unknown State."
 				ADHD.debug(debug_line)
+				ADHD.debug("----------------------------------------------")
 				desired_zoom := 0
 				break
 			}
 		} else {
 			debug_line .= "Zoom not detected. (Try #" tried_zoom "), "
 			; Zoom HUD indicator not read OK
-			if (tried_zoom <= 3){
+			if (tried_zoom < 3){
 				debug_line .= "Trying again..."
 				ADHD.debug(debug_line)
 
-				tried_zoom += 1
 				; Wait another 50ms and try again
 				sleep, 50
 				continue
 			} else {
-				debug_line .= "Aborting."
+				debug_line .= "Aborting - Current Zoom Unkown."
 				ADHD.debug(debug_line)
+				ADHD.debug("----------------------------------------------")
 
 				desired_zoom := 0
-				tried_zoom := 0
 				if (PlayDebugSounds){
 					soundbeep, 100, 100
 				}
@@ -681,12 +683,12 @@ get_zoom(calibmode){
 				if (AdvZoom){
 					debug_line .= "4x - NO (" last_4x ")"
 				}
-				debug_line .= "1x Assumed"
+				debug_line .= " : 1x Assumed"
 				zoom := 1.0
 			}
 		}
 	} else {
-		debug_line .= "Basic - FAILED (" last_col ")"
+		debug_line .= "Basic - FAILED (" last_basic ")"
 	}
 	;ADHD.debug("`nDetected zoom: " zoom)
 	if (!calibmode){
