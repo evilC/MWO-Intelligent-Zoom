@@ -287,14 +287,26 @@ CalibModeTimer(){
 }
 
 ; Takes the colour from the Current column and puts it in the Target column
-calibrate_colour(colour){
+calibrate_colour(row){
 	Global CalibMode
+	Global calib_list
 
 	if (CalibMode){
-		GuiControlGet, tmp,, %colour%Current
-		GuiControl,,%colour%Col, %tmp%
-		soundbeep
+		; Grab current colour from GUI
+		GuiControlGet, tmp,, %row%Current
+	} else {
+		; Grab current colour from screen
+		tmpx := row "X"
+		tmpy := row "Y"
+		tmpx := %tmpx%
+		tmpy := %tmpy%
+		take_snapshot()
+		tmp := pixel_get_color(tmpx,tmpy)
+		; Strip 0x
+		tmp := substr(tmp,3)
 	}
+	GuiControl,,%row%Col, %tmp%
+	soundbeep
 }
 
 ; Tries to work out coordinates to use based upon a mathematical formula
