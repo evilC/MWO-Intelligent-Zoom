@@ -131,9 +131,9 @@ Gui, Add, Text, xp+50 yp+3 W40 center vFourState,
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
 Gui, Add, Text, xp+100 yp W30 vCurrentZoom,
 
-Gui, Add, Button, xp+50 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
+Gui, Add, Button, xp+30 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
 
-Gui, Add, Text, xp+110 yp+5 W40 center vSnapshotLab, SnapShot:
+Gui, Add, Text, xp+120 yp+5 W40 center vSnapshotLab, SnapShot:
 Gui, Add, Text, 0xE xp+60 yp-5 w50 h25 hwndhPic vSnapshot          ; SS_Bitmap    = 0xE
 
 Gui, Add, Text, x5 yp+30, MWO Keys: Zoom
