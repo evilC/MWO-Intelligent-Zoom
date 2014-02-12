@@ -6,6 +6,14 @@ Key:
 = : Change / Fix
 + : Added feature
 
+4.3.0
++ New "SnapShot" based detection system.
+  Instead of making 2-4 pixel checks (each taking ~30ms and maybe the screen changes between each),
+  the new system takes one snapshot (~50ms) and then can do multiple checks quickly on a section of the same frame.
++ New SnapShot preview GUI item.
+  Now you can see what the code is looking at - A picture is displayed of the area surrounding the pixels in the coordinate boxes.
+! The SnapShot preview only shows whilst in Calibration or Debug Mode
+
 4.2 9th Feb 2014
 = Calibration mode UI elements should now hide properly when not in calibration mode, or on another tab.
 = Change label for Calibrate 4x

@@ -818,18 +818,21 @@ on_exit_hook(){
 ; Enable / Diable Calibration Mode
 calib_mode_changed(){
 	global CalibMode
+	global adhd_debug_mode
 	Global adhd_current_tab
 
 	gui, submit, nohide
 	
-	if (CalibMode && adhd_current_tab == "Main"){
+	if ((CalibMode || adhd_debug_mode) && adhd_current_tab == "Main"){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
 		Guicontrol, -hidden, DetectCoordinates
 		GuiControl, -hidden,Snapshot
 		GuiControl, -hidden,SnapshotLab
 
-		SetTimer, CalibModeTimer, 250
+		if (CalibMode){
+			SetTimer, CalibModeTimer, 250
+		}
 	} else {
 		Guicontrol, +hidden, DetZoomLab
 		Guicontrol, +hidden, CurrentZoom
@@ -930,10 +933,11 @@ take_snapshot(){
 	global pixel_detect_start
 	global pixel_detect_size
 	global CalibMode
+	global adhd_debug_mode
 
 	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
 	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
-	if (CalibMode){
+	if (CalibMode || adhd_debug_mode){
 		show_snapshot()
 	}
 	return
