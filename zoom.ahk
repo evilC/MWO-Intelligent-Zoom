@@ -176,14 +176,15 @@ pToken := Gdip_Startup()
 ; Add Calibration Popup (Debug window is 2, so window 3)
 Gui, 3:Add, Text, x5 y5 w300 h40, Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah 
 
-Gui, 3:Add, Radio, x5 yp+45 Checked gCalibStepRateChanged vCalibStepRate, 20
+Gui, 3:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
+Gui, 3:Add, Radio, x5 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
 Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 10
 Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 5
 Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 2
 Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 1
 
 xpos := 60
-ypos := 70
+ypos := 90
 xp1 := xpos - 45
 xp2 := xpos + 45
 yp1 := ypos + 20
@@ -266,19 +267,19 @@ CalibSnapshotWidthUp:
 	return
 
 CalibSnapshotPosUp:
-	calib_snapshot_y(-1)
-	return
-
-CalibSnapshotPosDown:
 	calib_snapshot_y(1)
 	return
 
+CalibSnapshotPosDown:
+	calib_snapshot_y(-1)
+	return
+
 CalibSnapshotPosLeft:
-	calib_snapshot_x(-1)
+	calib_snapshot_x(1)
 	return
 
 CalibSnapshotPosRight:
-	calib_snapshot_x(1)
+	calib_snapshot_x(-1)
 	return
 
 CalibStepRateChanged:
@@ -612,12 +613,9 @@ calib_snapshot_size(dir,axis){
 	global SnapshotCalib
 	global CalibStepRate
 
-	;msgbox % CalibStepRate
-
-	;calib_size[axis] += dir * 10
-	;calib_offset[axis] += dir * -5
-	scale := CalibStepRate
-	mv := (CalibStepRate / 2) * -1
+	mv := round((CalibStepRate / 2) * -1)
+	; make scale always a multiple of 2 by multiplying by mv (inverted)
+	scale := mv * -2
 
 	calib_size[axis] += dir * scale
 	calib_offset[axis] += dir * mv
@@ -625,13 +623,9 @@ calib_snapshot_size(dir,axis){
 	GuiControlGet, out, Pos, SnapshotCalib
 
 	if (axis == 1){
-		;outx += dir * -5
-		;outw += dir *10
 		outx += dir * mv
 		outw += dir * scale
 	} else {
-		;outy += dir * -5
-		;outh += dir *10
 		outy += dir * mv
 		outh += dir * scale
 	}
