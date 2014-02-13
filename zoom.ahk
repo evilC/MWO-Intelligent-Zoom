@@ -202,6 +202,8 @@ Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapsho
 Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
 Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
 
+;Gui, 3:Add, Progress, x5 yp+40 w300 h150 BackgroundRed disabled vSnapshotCalibBG
+;Gui, 3:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
 Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
 ;Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
 Gui, 3:Add, Button, x5 yp+150 gDetectCoordinates, Detect Coordinates
@@ -464,6 +466,7 @@ calibration_mode(){
 	;	return
 
 	/*
+	; Work out rough area of Zoom HUD element
 	half_width := round(curr_size.w / 2)
 	half_height := round(curr_size.h / 2)
 
@@ -493,6 +496,7 @@ calibration_mode(){
 
 center_calib_snapshot(){
 	global SnapshotCalib
+	global SnapshotCalibBG
 	global calib_size
 
 	;GuiControlGet, out, Pos, SnapshotCalib
@@ -507,6 +511,17 @@ center_calib_snapshot(){
 	outy += 120
 
 	Guicontrol, 3:Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
+
+	/*
+	if (outw * outh < 1000){
+		guicontrol, +BackgroundGreen +hidden, SnapshotCalibBG
+		guicontrol, -hidden, SnapshotCalibBG
+	} else {
+		guicontrol, +BackgroundRed +hidden, SnapshotCalibBG
+		guicontrol, -hidden, SnapshotCalibBG
+	}
+	*/
+	
 }
 
 detect_coordinates(){
