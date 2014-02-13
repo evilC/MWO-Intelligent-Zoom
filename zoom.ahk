@@ -408,14 +408,10 @@ detect_coordinates(){
 
 	; Detect best coordinates for each zoom
 
-	; ToDo: cache_zooms does not need to be object of objects?
-	cache_zooms := Object()		; A cache for each pixel in the box to store yes/no 
-
 	detected_coords := Object()
 	Loop, % num_snapshots {
 		; Try to find a pixel for each zoom level
 		oz := A_Index
-		cache_zooms.insert([])
 
 		detected_coords.insert([])
 		; Basic handled by other loop for now
@@ -430,12 +426,15 @@ detect_coordinates(){
 
 			tol := ot * 10
 
+			; Init vars for each tolerance run
 			snapshot_idx := oz - 1
 			snapshot_ctr := 0
 
+			detection_cache := Object()		; A cache for each pixel in the box to store yes/no 
+			detection_cache.insert([])
+
 			Loop, % num_snapshots {
 				; Loop through each snapshot
-				cache_zooms[oz].insert([])
 				snapshot_idx++
 				if (snapshot_idx > num_snapshots){
 					snapshot_idx := 1
@@ -446,7 +445,7 @@ detect_coordinates(){
 					; pixel loop - x
 					zx := A_Index - 1	; used for zero-based indexes
 					ox := A_Index		; used for one-based indexes
-					cache_zooms[oz][A_Index].insert([])
+					detection_cache[A_Index].insert([])
 					Loop, % pixel_detect_size[2] {
 						; pixel loop - y
 						zy := A_Index - 1
@@ -454,7 +453,7 @@ detect_coordinates(){
 
 						if (snapshot_idx != oz){
 							; if not the base level...
-							if (cache_zooms[oz][ox,oy] == 0){
+							if (detection_cache[ox,oy] == 0){
 								; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
 								continue
 							}
@@ -467,20 +466,17 @@ detect_coordinates(){
 
 						if (snapshot_idx == oz){
 							; If this is the base snapshot, store true/false value of compare
-							cache_zooms[oz][ox,oy] := cmp
+							detection_cache[ox,oy] := cmp
 						} else {
 							; The pixel passed the base check.
 							; A further match means pixel is not unique, a fail is good. So invert value of cmp
-							cache_zooms[oz][ox,oy] := !cmp
+							detection_cache[ox,oy] := !cmp
 						}
 
 						; Detect success
-						if (cache_zooms[oz][ox,oy] && (snapshot_ctr == num_snapshots)){
+						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
 							; This pixel is a match
 							detected_coords[oz].insert([ox,oy])
-							;if (oz != 2){
-							;	ADHD.debug("Z: " oz " - " snapx_to_screen(ox) "," snapy_to_screen(oy))
-							;}
 						}
 
 					}
