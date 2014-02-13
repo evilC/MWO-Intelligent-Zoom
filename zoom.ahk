@@ -545,7 +545,6 @@ detect_coordinates(){
 			break
 		}
 	}
-	sleep, 1000
 
 	;msgbox % calib_offset[1] "," calib_offset[2] " - " calib_size[1] "x" calib_size[2]
 	;msgbox % pixel_detect_start[1] "," pixel_detect_start[2] " - " pixel_detect_size[1] "x" pixel_detect_size[2]
@@ -676,6 +675,7 @@ detect_coordinates(){
 	}
 }
 
+; resizes the calibration snapshot
 calib_snapshot_size(dir,axis){
 	global calib_size
 	global calib_offset
@@ -702,28 +702,13 @@ calib_snapshot_size(dir,axis){
 	calib_size[axis] := sz
 	calib_offset[axis] += dir * mv
 
-	GuiControlGet, out, Pos, SnapshotCalib
-
-	if (axis == 1){
-		outx += dir * mv
-		outw += dir * scale
-	} else {
-		outy += dir * mv
-		outh += dir * scale
-	}
-
-	if (outw * outh < 1000){
-	} else {
-	}
-
-	center_calib_snapshot()
-	;Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
-
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)	
 
+	center_calib_snapshot()
 }
 
+; moves the calibration snapshot
 calib_snapshot_pos(dir,axis){
 	global calib_size
 	global calib_offset
@@ -773,80 +758,6 @@ snapshot_to_screen(coord,ctype){
 	return coord - 1 + calib_offset[ctype]
 }
 
-/*
-; Tries to work out coordinates to use based upon a mathematical formula
-detect_coordinates_old(){
-	Global ADHD
-	global adhd_limit_application_on
-	global adhd_limit_application
-	global calib_list
-	global axis_list
-
-	if (!adhd_limit_application_on){
-		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
-		return
-	}
-	StringCaseSense, On
-	if (adhd_limit_application != "CryENGINE"){
-		msgbox The "Limit to Application" option in the Bindings tab must be set to "CryENGINE" (No Quotes, CaSe SenSITive).
-		StringCaseSense, Off
-		return
-	}
-	StringCaseSense, Off
-
-	curr_size := ADHD.limit_app_get_size()
-	if (curr_size.h == -1){
-		msgbox "Resolution not detected - please open the game, then try again."
-		return
-	}
-
-	msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
-
-	IfMsgBox, No
-		return
-
-	; pixel ratios. Calculated from a known good (hand picked) coordinate - should be the same for all resolutions.
-	; x: half_width / (x_coord - half_width)
-	; y: half_width / (y_coord - half_height)
-	x_ratio := Array()
-	y_ratio := Array()
-
-	x_ratio[1] := 2.7826086957
-	y_ratio[1] := 3.9669421488
-
-	x_ratio[2] := 2.7195467422
-	y_ratio[2] := 4.085106383
-
-	x_ratio[3] := 2.8656716418
-	y_ratio[3] := 3.9669421488
-
-	x_ratio[4] := 2.8571428571
-	y_ratio[4] := 4.085106383
-
-	half_width := round(curr_size.w / 2)
-	half_height := round(curr_size.h / 2)
-
-	x_coord := Array()
-	y_coord := Array()
-
-	Loop, 4 {
-		x_coord[A_Index] := round((half_width / x_ratio[A_Index]) + half_width)
-		y_coord[A_Index] := round((half_width / y_ratio[A_Index]) + half_height)
-	}
-
-	
-	Loop, 4 {
-		ctr := A_Index
-		Loop, 2 {
-			axis := axis_list[A_Index]
-			val := %axis%_coord[ctr]
-			ctrl := calib_list[ctr] axis
-			GuiControl,,%ctrl%, %val%
-		}
-	}
-
-}
-*/
 
 ; Called on zoom in/out keystroke and sets a variable when one is pressed.
 ; Main use is preventing jitter and unwanted multiple zoom requests when zoom is bound to the mouse wheel
