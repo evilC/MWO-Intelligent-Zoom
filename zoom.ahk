@@ -16,6 +16,8 @@ calib_list := Array("Basic","Five","Three","Four")
 axis_list := Array("X","Y")
 pixel_detect_start := 0
 pixel_detect_size := 0
+calib_offset := 0
+calib_size := 0
 zoom_rates := Array(1.0,1.5,3.0,4.0)
 zoom_sequence := Array(1,2,3,1,2)
 default_colour := "F7AF36"
@@ -242,27 +244,35 @@ DetectCoordinates:
 	return
 
 CalibSnapshotHeightUp:
+	calib_snapshot_height(1)
 	return
 
 CalibSnapshotHeightDown:
+	calib_snapshot_height(-1)
 	return
 
 CalibSnapshotWidthDown:
+	calib_snapshot_width(-1)
 	return
 
 CalibSnapshotWidthUp:
+	calib_snapshot_width(1)
 	return
 
 CalibSnapshotPosUp:
+	calib_snapshot_y(-1)
 	return
 
 CalibSnapshotPosDown:
+	calib_snapshot_y(1)
 	return
 
 CalibSnapshotPosLeft:
+	calib_snapshot_x(-1)
 	return
 
 CalibSnapshotPosRight:
+	calib_snapshot_x(1)
 	return
 
 ; Functions
@@ -361,10 +371,6 @@ calibrate_colour(row){
 	soundbeep
 }
 
-~Mbutton::
-	detect_coordinates()
-	return
-
 detect_coordinates(){
 	global ADHD
 	global snapshot_bmp
@@ -376,6 +382,8 @@ detect_coordinates(){
 	global AdvZoomKey
 	global adhd_limit_application_on
 	global adhd_limit_application
+	global calib_offset
+	global calib_size
 
 
 	if (!adhd_limit_application_on){
@@ -423,14 +431,19 @@ detect_coordinates(){
 	y_coord := round((half_width / 3.9669421488) + half_height)
 
 
-	window_start := Array(x_coord-150,y_coord-75)
-	window_size := Array(300,150)
-	snapshot_calib := take_snapshot_custom(window_start,window_size)
+	calib_offset := Array(x_coord-150,y_coord-75)
+	calib_size := Array(300,150)
+	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
+
+	;window_start := Array(x_coord-150,y_coord-75)
+	;window_size := Array(300,150)
+	;snapshot_calib := take_snapshot_custom(window_start,window_size)
+
 	show_snapshot_calib(snapshot_calib)
 
 	; Show GUI
 	;Gui, 2:Show, x%x% y%y% w%w% h400, ADHD Debug Window
-	Gui, 3:Show, w310 h360, Calibration Popup
+	Gui, 3:Show, x0 y0 w310 h360, Calibration Popup
 	set_always_on_top()
 
 	return
@@ -568,8 +581,53 @@ detect_coordinates(){
 	}
 }
 
-~!mbutton::
-soundbeep
+calib_snapshot_size(dir,axis){
+	global calib_size
+	global calib_offset
+	global snapshot_calib
+	global SnapshotCalib
+
+	calib_size[axis] += dir * 10
+	calib_offset[axis] += dir * -5
+
+	GuiControlGet, out, Pos, SnapshotCalib
+
+	if (axis == 1){
+		outx += dir * -5
+		outw += dir *10
+	} else {
+		outy += dir * -5
+		outh += dir *10
+	}
+
+	Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
+
+	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
+	show_snapshot_calib(snapshot_calib)	
+}
+
+calib_snapshot_height(dir){
+	calib_snapshot_size(dir,2)
+	return
+}
+
+calib_snapshot_width(dir){
+	calib_snapshot_size(dir,1)
+	return
+}
+
+calib_snapshot_x(dir){
+	global calib_offset
+
+	calib_offset[1] += dir * 10
+}
+
+calib_snapshot_y(dir){
+	global calib_offset
+
+	calib_offset[2] += dir * 10
+}
+
 CalibTest:
 	WinActivate, ahk_class CryENGINE
 	Send {z}
@@ -1176,7 +1234,7 @@ calib_mode_changed(){
 		GuiControl,,FiveState,
 		GuiControl,,ThreeState,
 		GuiControl,,FourState,
-		GuiControl, +hidden,DetectCoordinates
+		GuiControl, -hidden,DetectCoordinates
 		GuiControl, +hidden,SnapshotMain
 		GuiControl, +hidden,SnapshotLab
 	}
@@ -1190,12 +1248,13 @@ set_always_on_top(){
 		Gui,+AlwaysOnTop
 		; Set debug window always on top also
 		Gui,2:+AlwaysOnTop
-		Gui,3:+AlwaysOnTop
+		;Gui,3:+AlwaysOnTop
 	} else {
 		Gui,-AlwaysOnTop
 		Gui,2:-AlwaysOnTop
-		Gui,3:-AlwaysOnTop
+		;Gui,3:-AlwaysOnTop
 	}
+	Gui,3:+AlwaysOnTop
 }
 
 ; Calculates size and position of a box that covers all the coordinates
