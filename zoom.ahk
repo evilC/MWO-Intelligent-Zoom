@@ -173,13 +173,17 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 
 pToken := Gdip_Startup()
 
-ADHD.finish_startup()
-
 ; Add Calibration Popup (Debug window is 2, so window 3)
 Gui, 3:Add, Text, x5 y5 w300 h40, Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah 
 
+Gui, 3:Add, Radio, x5 yp+45 Checked gCalibStepRateChanged vCalibStepRate, 20
+Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 10
+Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 5
+Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 2
+Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 1
+
 xpos := 60
-ypos := 50
+ypos := 70
 xp1 := xpos - 45
 xp2 := xpos + 45
 yp1 := ypos + 20
@@ -198,7 +202,9 @@ Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapsh
 Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
 
 Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib          ; SS_Bitmap    = 0xE
-Gui, 3:Add, Button, x5 yp+150 gCalibTest, Refresh
+Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
+
+ADHD.finish_startup()
 
 ; kick off the heartbeat
 start_heartbeat()
@@ -273,6 +279,21 @@ CalibSnapshotPosLeft:
 
 CalibSnapshotPosRight:
 	calib_snapshot_x(1)
+	return
+
+CalibStepRateChanged:
+	gui, 3:submit, nohide
+	if (CalibStepRate == 1){
+		CalibStepRate := 20
+	} else if (CalibStepRate == 2){
+		CalibStepRate := 10
+	} else if (CalibStepRate == 3){
+		CalibStepRate := 5
+	} else if (CalibStepRate == 4){
+		CalibStepRate := 2
+	} else if (CalibStepRate == 5){
+		CalibStepRate := 1
+	}
 	return
 
 ; Functions
@@ -443,8 +464,11 @@ detect_coordinates(){
 
 	; Show GUI
 	;Gui, 2:Show, x%x% y%y% w%w% h400, ADHD Debug Window
+
 	Gui, 3:Show, x0 y0 w310 h360, Calibration Popup
+	Gui, 3:Submit, Nohide
 	set_always_on_top()
+	Gosub, CalibStepRateChanged
 
 	return
 	; Detect pixels
@@ -586,21 +610,46 @@ calib_snapshot_size(dir,axis){
 	global calib_offset
 	global snapshot_calib
 	global SnapshotCalib
+	global CalibStepRate
 
-	calib_size[axis] += dir * 10
-	calib_offset[axis] += dir * -5
+	;msgbox % CalibStepRate
+
+	;calib_size[axis] += dir * 10
+	;calib_offset[axis] += dir * -5
+	scale := CalibStepRate
+	mv := (CalibStepRate / 2) * -1
+
+	calib_size[axis] += dir * scale
+	calib_offset[axis] += dir * mv
 
 	GuiControlGet, out, Pos, SnapshotCalib
 
 	if (axis == 1){
-		outx += dir * -5
-		outw += dir *10
+		;outx += dir * -5
+		;outw += dir *10
+		outx += dir * mv
+		outw += dir * scale
 	} else {
-		outy += dir * -5
-		outh += dir *10
+		;outy += dir * -5
+		;outh += dir *10
+		outy += dir * mv
+		outh += dir * scale
 	}
 
 	Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
+
+	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
+	show_snapshot_calib(snapshot_calib)	
+}
+
+calib_snapshot_pos(dir,axis){
+	global calib_size
+	global calib_offset
+	global snapshot_calib
+	global SnapshotCalib
+	global CalibStepRate
+
+	calib_offset[axis] += dir * CalibStepRate
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)	
@@ -617,15 +666,13 @@ calib_snapshot_width(dir){
 }
 
 calib_snapshot_x(dir){
-	global calib_offset
-
-	calib_offset[1] += dir * 10
+	calib_snapshot_pos(dir,1)
+	return
 }
 
 calib_snapshot_y(dir){
-	global calib_offset
-
-	calib_offset[2] += dir * 10
+	calib_snapshot_pos(dir,2)
+	return
 }
 
 CalibTest:
@@ -633,33 +680,7 @@ CalibTest:
 	Send {z}
 	;ControlSend, , {z}, ahk_class CryENGINE
 	sleep, 200
-	curr_size := ADHD.limit_app_get_size()
-	half_width := round(curr_size.w / 2)
-	half_height := round(curr_size.h / 2)
-
-	if (x_coord != ""){
-		x_coord += 10
-		y_coord += 10
-		ns := window_size[1]-20
-		if (ns > 0){
-			window_size := Array(ns,ns/2)
-			GuiControlGet, SnapshotCalib, Pos
-
-			SnapshotCalibX += 10
-			SnapshotCalibY += 10
-
-			;Guicontrol, Move, SnapshotCalib, x10 y10
-			Guicontrol, Move, SnapshotCalib, x%SnapshotCalibX% y%SnapshotCalibY%
-		}
-	} else {
-		x_coord := round((half_width / 2.7826086957) + half_width)
-		y_coord := round((half_width / 3.9669421488) + half_height)
-		window_size := Array(300,150)
-	}
-
-
-	window_start := Array(x_coord-150,y_coord-75)
-	snapshot_calib := take_snapshot_custom(window_start,window_size)
+	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
 
 	return
@@ -678,6 +699,7 @@ snapshot_to_screen(coord,ctype){
 	return coord - 1 + pixel_detect_start[ctype]
 }
 
+/*
 ; Tries to work out coordinates to use based upon a mathematical formula
 detect_coordinates_old(){
 	Global ADHD
@@ -750,6 +772,7 @@ detect_coordinates_old(){
 	}
 
 }
+*/
 
 ; Called on zoom in/out keystroke and sets a variable when one is pressed.
 ; Main use is preventing jitter and unwanted multiple zoom requests when zoom is bound to the mouse wheel
