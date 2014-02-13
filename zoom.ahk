@@ -223,6 +223,8 @@ DetectCoordinates:
 ; Populates Current+Swatch and State columns. Also the Detected Zoom readout at bottom
 CalibModeTimer(){
 	Global calib_list
+	global snapshot_bmp
+
 	if WinActive("ahk_class CryENGINE"){
 		check_results := Array()
 		Loop, % calib_list.MaxIndex(){
@@ -231,7 +233,7 @@ CalibModeTimer(){
 			tmpx := %tmpx%
 			tmpy := %tmpy%
 			;PixelGetColor, current_col, %tmpx%, %tmpy%, RGB
-			current_col := pixel_get_color(tmpx,tmpy)
+			current_col := pixel_get_color(tmpx,tmpy,snapshot_bmp)
 
 			current_col_obj := ToRGB(current_col)
 			
@@ -290,6 +292,7 @@ CalibModeTimer(){
 calibrate_colour(row){
 	Global CalibMode
 	Global calib_list
+	global snapshot_bmp
 
 	if (CalibMode){
 		; Grab current colour from GUI
@@ -301,7 +304,7 @@ calibrate_colour(row){
 		tmpx := %tmpx%
 		tmpy := %tmpy%
 		take_snapshot()
-		tmp := pixel_get_color(tmpx,tmpy)
+		tmp := pixel_get_color(tmpx,tmpy,snapshot_bmp)
 		; Strip 0x
 		tmp := substr(tmp,3)
 	}
@@ -309,8 +312,104 @@ calibrate_colour(row){
 	soundbeep
 }
 
-; Tries to work out coordinates to use based upon a mathematical formula
+~Mbutton::
+	detect_coordinates()
+	return
+
 detect_coordinates(){
+	global snapshot_bmp
+	global ZoomKey
+	global default_colour
+	global pixel_detect_size
+	global pixel_detect_start
+
+	tol := 40	; ToDo: use tol value from GUI
+
+	; Build cache of the 3 zooms
+	snapshots := Object()
+	Loop, 3 {
+		take_snapshot()
+		show_snapshot()
+		snapshots.insert(snapshot_bmp)
+		Send {%ZoomKey%}
+		Sleep, 1000
+	}
+
+	rgb_default := ToRGB("0x" default_colour)
+
+	; Search for a pixel common to all zooms
+
+	min_diff := 999999
+	cache_basic := Object()
+
+	num_snapshots := 3
+	best_match := Object()
+	best_match.insert([])
+
+	Loop, % num_snapshots {
+		cache_basic.insert([])
+		snapshot_idx := A_Index
+		Loop, % pixel_detect_size[1] {
+			zx := A_Index - 1	; used for zero-based indexes
+			ox := A_Index		; used for one-based indexes
+			cache_basic[A_Index].insert([])
+			Loop, % pixel_detect_size[2] {
+				zy := A_Index - 1
+				oy := A_Index
+				diff := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
+				diff := round(Diff(ToRGB(diff), rgb_default))
+
+				if (snapshot_idx == 1){
+					cache_basic[ox,oy] := 0
+				}
+
+				cache_basic[ox,oy] += diff
+
+				if (snapshot_idx == num_snapshots){
+					if (cache_basic[ox,oy] < min_diff){
+						min_diff := diff
+						best_match[1] := ox
+						best_match[2] := oy
+					}
+				}
+			}
+		}
+	}
+
+	msgbox % "Best basic pixel: " snapx_to_screen(best_match[1]) "," snapy_to_screen(best_match[2])
+
+	/*
+	; Detect best coordinates for each zoom
+
+	Loop, % num_snapshots {
+		snapshot_idx := A_Index
+		Loop, % pixel_detect_size[1] {
+			zx := A_Index - 1	; used for zero-based indexes
+			ox := A_Index		; used for one-based indexes
+			Loop, % pixel_detect_size[2] {
+
+			}
+		}
+	}
+	*/	
+}
+
+snapx_to_screen(coord){
+	return snapshot_to_screen(coord,1)
+}
+
+snapy_to_screen(coord){
+	return snapshot_to_screen(coord,2)
+}
+
+; Converts snapshot coordinates to screen coordinates
+snapshot_to_screen(coord,ctype){
+	global pixel_detect_start
+	return coord - 1 + pixel_detect_start[ctype]
+}
+
+; Tries to work out coordinates to use based upon a mathematical formula
+detect_coordinates_old(){
 	Global ADHD
 	global adhd_limit_application_on
 	global adhd_limit_application
@@ -781,13 +880,14 @@ check_4x(){
 ; Default colour is 0xF7AF36
 pixel_check(x,y,col,tol){
 	Global last_col
+	global snapshot_bmp
 
 	col := "0x" col
 	col := ToRGB(col)
 
 	;tim := A_TickCount
 	;PixelGetColor, det_obj, %x%, %y%, RGB
-	det_obj := pixel_get_color(x,y)
+	det_obj := pixel_get_color(x,y,snapshot_bmp)
 
 	last_col := det_obj
 	det_obj := ToRGB(det_obj)
@@ -928,24 +1028,22 @@ rebuild_coordcache(){
 
 ; GDI+ Functions
 ; Gets colour of a pixel relative to the snapshot
-snapshot_get_color(xpos,ypos){
-	global snapshot_bmp
-
-	ret := GDIP_GetPixel(snapshot_bmp, xpos, ypos)
+snapshot_get_color(xpos, ypos, src){
+	ret := GDIP_GetPixel(src, xpos, ypos)
 	ret := ARGBtoRGB(ret)
 	return ret
 }
 
 ; Gets colour of a pixel relative to the screen
-pixel_get_color(xpos, ypos){
+pixel_get_color(xpos, ypos, src){
 	global pixel_detect_start
 
-	PixelGetColor, current_col, %xpos%, %ypos%, RGB
+	;PixelGetColor, current_col, %xpos%, %ypos%, RGB
 
 	xpos := xpos - pixel_detect_start[1]
 	ypos := ypos - pixel_detect_start[2]
 
-	ret := snapshot_get_color(xpos,ypos)
+	ret := snapshot_get_color(xpos,ypos,src)
 
 	;msgbox % xpos "," ypos ": " ret "(PixelGetColor says: " current_col ")"
 	return ret
@@ -990,6 +1088,14 @@ Compare(c1, c2, tol := 20) {
     bdiff := Abs( c1.b - c2.b )
 
     return rdiff <= tol && gdiff <= tol && bdiff <= tol
+}
+
+Diff(c1,c2){
+    rdiff := Abs( c1.r - c2.r )
+    gdiff := Abs( c1.g - c2.g )
+    bdiff := Abs( c1.b - c2.b )
+
+    return (rdiff + gdiff + bdiff) / 3
 }
 
 ARGBtoRGB( ARGB ){
