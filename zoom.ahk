@@ -486,7 +486,27 @@ calibration_mode(){
 	set_always_on_top()
 	Gosub, CalibStepRateChanged
 
+	center_calib_snapshot()
+
 	return
+}
+
+center_calib_snapshot(){
+	global SnapshotCalib
+	global calib_size
+
+	;GuiControlGet, out, Pos, SnapshotCalib
+
+	outw := calib_size[1]
+	outh := calib_size[2]
+
+	outx := (150 - round(outw / 2))
+	outy := (125 - round(outh / 2))
+
+	outx += 2
+	outy += 120
+
+	Guicontrol, 3:Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
 }
 
 detect_coordinates(){
@@ -635,7 +655,7 @@ detect_coordinates(){
 						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
 							; This pixel is a match
 							detected_coords[oz].insert([ox,oy])
-							ADHD.debug(oz ": " ox "," oy "(" ox + calib_offset[1] "," oy + calib_offset[2] ")")
+							;ADHD.debug(oz ": " ox "," oy "(" ox + calib_offset[1] "," oy + calib_offset[2] ")")
 						}
 					}
 				}
@@ -696,7 +716,8 @@ calib_snapshot_size(dir,axis){
 	} else {
 	}
 
-	Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
+	center_calib_snapshot()
+	;Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)	
