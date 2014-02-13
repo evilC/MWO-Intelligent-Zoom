@@ -174,9 +174,29 @@ pToken := Gdip_Startup()
 ADHD.finish_startup()
 
 ; Add Calibration Popup (Debug window is 2, so window 3)
-;Gui, 3:Add,Edit,w300 h350 vcalib_popup, 
-Gui, 3:Add, Text, 0xE x5 yp+20 w250 h250 hwndhSnapshotCalib vSnapshotCalib          ; SS_Bitmap    = 0xE
-Gui, 3:Add, Button, x5 yp+250 gCalibTest, Refresh
+Gui, 3:Add, Text, x5 y5 w300 h40, Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah 
+
+xpos := 60
+ypos := 50
+xp1 := xpos - 45
+xp2 := xpos + 45
+yp1 := ypos + 20
+yp2 := ypos + 40
+Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
+Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
+Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
+Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSnapshotHeightDown, Height`n-
+
+xpos := 210
+xp1 := xpos - 45
+xp2 := xpos + 45
+Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
+Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
+Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
+Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
+
+Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib          ; SS_Bitmap    = 0xE
+Gui, 3:Add, Button, x5 yp+150 gCalibTest, Refresh
 
 ; kick off the heartbeat
 start_heartbeat()
@@ -219,6 +239,30 @@ Calibrate4x:
 
 DetectCoordinates:
 	detect_coordinates()
+	return
+
+CalibSnapshotHeightUp:
+	return
+
+CalibSnapshotHeightDown:
+	return
+
+CalibSnapshotWidthDown:
+	return
+
+CalibSnapshotWidthUp:
+	return
+
+CalibSnapshotPosUp:
+	return
+
+CalibSnapshotPosDown:
+	return
+
+CalibSnapshotPosLeft:
+	return
+
+CalibSnapshotPosRight:
 	return
 
 ; Functions
@@ -379,14 +423,14 @@ detect_coordinates(){
 	y_coord := round((half_width / 3.9669421488) + half_height)
 
 
-	window_start := Array(x_coord-125,y_coord-125)
-	window_size := Array(250,250)
+	window_start := Array(x_coord-150,y_coord-75)
+	window_size := Array(300,150)
 	snapshot_calib := take_snapshot_custom(window_start,window_size)
 	show_snapshot_calib(snapshot_calib)
 
 	; Show GUI
 	;Gui, 2:Show, x%x% y%y% w%w% h400, ADHD Debug Window
-	Gui, 3:Show, w350 h360, Calibration Popup
+	Gui, 3:Show, w310 h360, Calibration Popup
 	set_always_on_top()
 
 	return
@@ -540,7 +584,7 @@ CalibTest:
 		y_coord += 10
 		ns := window_size[1]-20
 		if (ns > 0){
-			window_size := Array(ns,ns)
+			window_size := Array(ns,ns/2)
 			GuiControlGet, SnapshotCalib, Pos
 
 			SnapshotCalibX += 10
@@ -552,11 +596,11 @@ CalibTest:
 	} else {
 		x_coord := round((half_width / 2.7826086957) + half_width)
 		y_coord := round((half_width / 3.9669421488) + half_height)
-		window_size := Array(250,250)
+		window_size := Array(300,150)
 	}
 
 
-	window_start := Array(x_coord-125,y_coord-125)
+	window_start := Array(x_coord-150,y_coord-75)
 	snapshot_calib := take_snapshot_custom(window_start,window_size)
 	show_snapshot_calib(snapshot_calib)
 
