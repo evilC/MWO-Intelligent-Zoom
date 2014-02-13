@@ -133,7 +133,7 @@ Gui, Add, Text, xp+50 yp+3 W40 center vFourState,
 Gui, Add, Text, x5 yp+30 vDetZoomLab, Detected Zoom: 
 Gui, Add, Text, xp+100 yp W30 vCurrentZoom,
 
-Gui, Add, Button, xp+30 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
+Gui, Add, Button, xp+30 yp-5 gCalibrationMode, Calibration Mode
 
 Gui, Add, Text, xp+120 yp+5 W40 center vSnapshotLab, SnapShot:
 Gui, Add, Text, 0xE xp+60 yp-5 w50 h25 hwndhSnapshotMain vSnapshotMain          ; SS_Bitmap    = 0xE
@@ -202,8 +202,9 @@ Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapsho
 Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
 Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
 
-Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib          ; SS_Bitmap    = 0xE
-Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
+Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
+;Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
+Gui, 3:Add, Button, x5 yp+150 gDetectCoordinates, Detect Coordinates
 
 ADHD.finish_startup()
 
@@ -248,6 +249,10 @@ Calibrate4x:
 
 DetectCoordinates:
 	detect_coordinates()
+	return
+
+CalibrationMode:
+	calibration_mode()
 	return
 
 CalibSnapshotHeightUp:
@@ -296,6 +301,18 @@ CalibStepRateChanged:
 		CalibStepRate := 1
 	}
 	return
+
+/*
+CalibTest:
+	WinActivate, ahk_class CryENGINE
+	Send {z}
+	;ControlSend, , {z}, ahk_class CryENGINE
+	sleep, 200
+	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
+	show_snapshot_calib(snapshot_calib)
+
+	return
+*/
 
 ; Functions
 ; =================================================
@@ -393,9 +410,9 @@ calibrate_colour(row){
 	soundbeep
 }
 
-detect_coordinates(){
+calibration_mode(){
 	global ADHD
-	global snapshot_bmp
+	global snapshot_calib
 	global ZoomKey
 	global default_colour
 	global pixel_detect_size
@@ -446,6 +463,7 @@ detect_coordinates(){
 	;IfMsgBox, No
 	;	return
 
+	/*
 	half_width := round(curr_size.w / 2)
 	half_height := round(curr_size.h / 2)
 
@@ -455,23 +473,36 @@ detect_coordinates(){
 
 	calib_offset := Array(x_coord-150,y_coord-75)
 	calib_size := Array(300,150)
+	*/
+
+	calib_offset := Array(1289,828)
+	calib_size := Array(27,20)
+
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
-
-	;window_start := Array(x_coord-150,y_coord-75)
-	;window_size := Array(300,150)
-	;snapshot_calib := take_snapshot_custom(window_start,window_size)
-
 	show_snapshot_calib(snapshot_calib)
 
-	; Show GUI
-	;Gui, 2:Show, x%x% y%y% w%w% h400, ADHD Debug Window
-
-	Gui, 3:Show, x0 y0 w310 h360, Calibration Popup
+	Gui, 3:Show, x0 y0 w310 h380, Calibration Popup
 	Gui, 3:Submit, Nohide
 	set_always_on_top()
 	Gosub, CalibStepRateChanged
 
 	return
+}
+
+detect_coordinates(){
+	global ADHD
+	global snapshot_calib
+	global ZoomKey
+	global default_colour
+	global pixel_detect_size
+	global pixel_detect_start
+	global AdvZoom
+	global AdvZoomKey
+	global adhd_limit_application_on
+	global adhd_limit_application
+	global calib_offset
+	global calib_size
+
 	; Detect pixels
 	; Build cache of the 3 zooms
 	snapshots := Object()
@@ -483,10 +514,28 @@ detect_coordinates(){
 		num_snapshots := 3
 	}
 
+	WinActivate, ahk_class %adhd_limit_application%
+
+	WinWaitActive, ahk_class %adhd_limit_application%
+
+	tim := A_TickCount + 5000
+	Loop {
+		curr_size := ADHD.limit_app_get_size()
+		if (A_TickCount > tim || curr_size.h != -1){
+			break
+		}
+	}
+	sleep, 1000
+
+	;msgbox % calib_offset[1] "," calib_offset[2] " - " calib_size[1] "x" calib_size[2]
+	;msgbox % pixel_detect_start[1] "," pixel_detect_start[2] " - " pixel_detect_size[1] "x" pixel_detect_size[2]
+
 	Loop, % num_snapshots {
-		take_snapshot()
-		show_snapshot()
-		snapshots.insert(snapshot_bmp)
+		snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
+		show_snapshot_calib(snapshot_calib)
+
+		snapshots.insert(snapshot_calib)
+
 		if (A_Index == num_snapshots){
 			; return to zoom 1
 			Send {%ZoomKey%}
@@ -542,12 +591,12 @@ detect_coordinates(){
 				}
 				snapshot_ctr++
 
-				Loop, % pixel_detect_size[1] {
+				Loop, % calib_size[1] {
 					; pixel loop - x
 					zx := A_Index - 1	; used for zero-based indexes
 					ox := A_Index		; used for one-based indexes
 					detection_cache[A_Index].insert([])
-					Loop, % pixel_detect_size[2] {
+					Loop, % calib_size[2] {
 						; pixel loop - y
 						zy := A_Index - 1
 						oy := A_Index
@@ -560,7 +609,7 @@ detect_coordinates(){
 							}
 						}
 
-						val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
+						val := pixel_get_color(calib_offset[1] + zx, calib_offset[2] + zy, snapshots[snapshot_idx])
 						val := ToRGB(val)
 
 						cmp := Compare(val, rgb_default, tol)
@@ -586,6 +635,7 @@ detect_coordinates(){
 						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
 							; This pixel is a match
 							detected_coords[oz].insert([ox,oy])
+							ADHD.debug(oz ": " ox "," oy "(" ox + calib_offset[1] "," oy + calib_offset[2] ")")
 						}
 					}
 				}
@@ -617,7 +667,19 @@ calib_snapshot_size(dir,axis){
 	; make scale always a multiple of 2 by multiplying by mv (inverted)
 	scale := mv * -2
 
-	calib_size[axis] += dir * scale
+	;calib_size[axis] += dir * scale
+	sz := calib_size[axis] + ( dir * scale )
+	if (axis == 1){
+		max_sz := 300
+	} else {
+		max_sz := 150
+	}
+
+	if (sz < 10 || sz > max_sz){
+		return
+	}
+
+	calib_size[axis] := sz
 	calib_offset[axis] += dir * mv
 
 	GuiControlGet, out, Pos, SnapshotCalib
@@ -630,10 +692,15 @@ calib_snapshot_size(dir,axis){
 		outh += dir * scale
 	}
 
+	if (outw * outh < 1000){
+	} else {
+	}
+
 	Guicontrol, Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)	
+
 }
 
 calib_snapshot_pos(dir,axis){
@@ -669,16 +736,6 @@ calib_snapshot_y(dir){
 	return
 }
 
-CalibTest:
-	WinActivate, ahk_class CryENGINE
-	Send {z}
-	;ControlSend, , {z}, ahk_class CryENGINE
-	sleep, 200
-	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
-	show_snapshot_calib(snapshot_calib)
-
-	return
-
 snapx_to_screen(coord){
 	return snapshot_to_screen(coord,1)
 }
@@ -689,8 +746,10 @@ snapy_to_screen(coord){
 
 ; Converts snapshot coordinates to screen coordinates
 snapshot_to_screen(coord,ctype){
-	global pixel_detect_start
-	return coord - 1 + pixel_detect_start[ctype]
+	;global pixel_detect_start
+	global calib_offset
+	;return coord - 1 + pixel_detect_start[ctype]
+	return coord - 1 + calib_offset[ctype]
 }
 
 /*
@@ -1236,7 +1295,7 @@ calib_mode_changed(){
 	if ((CalibMode || adhd_debug_mode) && adhd_current_tab == "Main"){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
-		Guicontrol, -hidden, DetectCoordinates
+		;Guicontrol, -hidden, DetectCoordinates
 		GuiControl, -hidden,SnapshotMain
 		GuiControl, -hidden,SnapshotLab
 
@@ -1251,7 +1310,7 @@ calib_mode_changed(){
 		GuiControl,,FiveState,
 		GuiControl,,ThreeState,
 		GuiControl,,FourState,
-		GuiControl, -hidden,DetectCoordinates
+		;GuiControl, -hidden,DetectCoordinates
 		GuiControl, +hidden,SnapshotMain
 		GuiControl, +hidden,SnapshotLab
 	}
