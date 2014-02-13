@@ -134,7 +134,7 @@ Gui, Add, Text, xp+100 yp W30 vCurrentZoom,
 Gui, Add, Button, xp+30 yp-5 gDetectCoordinates vDetectCoordinates, Detect Coordinates
 
 Gui, Add, Text, xp+120 yp+5 W40 center vSnapshotLab, SnapShot:
-Gui, Add, Text, 0xE xp+60 yp-5 w50 h25 hwndhPic vSnapshot          ; SS_Bitmap    = 0xE
+Gui, Add, Text, 0xE xp+60 yp-5 w50 h25 hwndhSnapshotMain vSnapshotMain          ; SS_Bitmap    = 0xE
 
 Gui, Add, Text, x5 yp+30, MWO Keys: Zoom
 ADHD.gui_add("Edit", "ZoomKey", "xp+90 yp-3 W30", "", "z")
@@ -172,6 +172,11 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 pToken := Gdip_Startup()
 
 ADHD.finish_startup()
+
+; Add Calibration Popup (Debug window is 2, so window 3)
+;Gui, 3:Add,Edit,w300 h350 vcalib_popup, 
+Gui, 3:Add, Text, 0xE x5 yp+20 w250 h250 hwndhSnapshotCalib vSnapshotCalib          ; SS_Bitmap    = 0xE
+Gui, 3:Add, Button, x5 yp+250 gCalibTest, Refresh
 
 ; kick off the heartbeat
 start_heartbeat()
@@ -325,11 +330,70 @@ detect_coordinates(){
 	global pixel_detect_start
 	global AdvZoom
 	global AdvZoomKey
+	global adhd_limit_application_on
+	global adhd_limit_application
 
-	rgb_default := ToRGB("0x" default_colour)
 
+	if (!adhd_limit_application_on){
+		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
+		return
+	}
+	StringCaseSense, On
+	if (adhd_limit_application != "CryENGINE"){
+		msgbox The "Limit to Application" option in the Bindings tab must be set to "CryENGINE" (No Quotes, CaSe SenSITive).
+		StringCaseSense, Off
+		return
+	}
+	StringCaseSense, Off
+
+	if(!WinExist("ahk_class " adhd_limit_application)){
+		msgbox Game not detected. Aborting.
+		return
+	}
+	WinActivate, ahk_class %adhd_limit_application%
+
+	WinWaitActive, ahk_class %adhd_limit_application%
+
+	tim := A_TickCount + 5000
+	Loop {
+		curr_size := ADHD.limit_app_get_size()
+		if (A_TickCount > tim || curr_size.h != -1){
+			break
+		}
+	}
+	
+	if (curr_size.h == -1){
+		msgbox "Resolution not detected. Aborting."
+		return
+	}
+
+	;msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
+
+	;IfMsgBox, No
+	;	return
+
+	half_width := round(curr_size.w / 2)
+	half_height := round(curr_size.h / 2)
+
+	x_coord := round((half_width / 2.7826086957) + half_width)
+	y_coord := round((half_width / 3.9669421488) + half_height)
+
+
+	window_start := Array(x_coord-125,y_coord-125)
+	window_size := Array(250,250)
+	snapshot_calib := take_snapshot_custom(window_start,window_size)
+	show_snapshot_calib(snapshot_calib)
+
+	; Show GUI
+	;Gui, 2:Show, x%x% y%y% w%w% h400, ADHD Debug Window
+	Gui, 3:Show, w350 h360, Calibration Popup
+	set_always_on_top()
+
+	return
+	; Detect pixels
 	; Build cache of the 3 zooms
 	snapshots := Object()
+	rgb_default := ToRGB("0x" default_colour)
 
 	if (AdvZoom){
 		num_snapshots := 4
@@ -459,6 +523,44 @@ detect_coordinates(){
 		}
 	}
 }
+
+~!mbutton::
+soundbeep
+CalibTest:
+	WinActivate, ahk_class CryENGINE
+	Send {z}
+	;ControlSend, , {z}, ahk_class CryENGINE
+	sleep, 200
+	curr_size := ADHD.limit_app_get_size()
+	half_width := round(curr_size.w / 2)
+	half_height := round(curr_size.h / 2)
+
+	if (x_coord != ""){
+		x_coord += 10
+		y_coord += 10
+		ns := window_size[1]-20
+		if (ns > 0){
+			window_size := Array(ns,ns)
+			GuiControlGet, SnapshotCalib, Pos
+
+			SnapshotCalibX += 10
+			SnapshotCalibY += 10
+
+			;Guicontrol, Move, SnapshotCalib, x10 y10
+			Guicontrol, Move, SnapshotCalib, x%SnapshotCalibX% y%SnapshotCalibY%
+		}
+	} else {
+		x_coord := round((half_width / 2.7826086957) + half_width)
+		y_coord := round((half_width / 3.9669421488) + half_height)
+		window_size := Array(250,250)
+	}
+
+
+	window_start := Array(x_coord-125,y_coord-125)
+	snapshot_calib := take_snapshot_custom(window_start,window_size)
+	show_snapshot_calib(snapshot_calib)
+
+	return
 
 snapx_to_screen(coord){
 	return snapshot_to_screen(coord,1)
@@ -1016,7 +1118,7 @@ calib_mode_changed(){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
 		Guicontrol, -hidden, DetectCoordinates
-		GuiControl, -hidden,Snapshot
+		GuiControl, -hidden,SnapshotMain
 		GuiControl, -hidden,SnapshotLab
 
 		if (CalibMode){
@@ -1031,7 +1133,7 @@ calib_mode_changed(){
 		GuiControl,,ThreeState,
 		GuiControl,,FourState,
 		GuiControl, +hidden,DetectCoordinates
-		GuiControl, +hidden,Snapshot
+		GuiControl, +hidden,SnapshotMain
 		GuiControl, +hidden,SnapshotLab
 	}
 }
@@ -1044,9 +1146,11 @@ set_always_on_top(){
 		Gui,+AlwaysOnTop
 		; Set debug window always on top also
 		Gui,2:+AlwaysOnTop
+		Gui,3:+AlwaysOnTop
 	} else {
 		Gui,-AlwaysOnTop
 		Gui,2:-AlwaysOnTop
+		Gui,3:-AlwaysOnTop
 	}
 }
 
@@ -1115,6 +1219,10 @@ pixel_get_color(xpos, ypos, src){
 	return ret
 }
 
+take_snapshot_custom(start,size){
+	return GDIP_BitmapFromScreen(start[1] "|" start[2] "|" size[1] "|" size[2])
+}
+
 take_snapshot(){
 	global snapshot_bmp
 	global pixel_detect_start
@@ -1122,7 +1230,8 @@ take_snapshot(){
 	global CalibMode
 	global adhd_debug_mode
 
-	snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
+	;snapshot_bmp := GDIP_BitmapFromScreen(pixel_detect_start[1] "|" pixel_detect_start[2] "|" pixel_detect_size[1] "|" pixel_detect_size[2])
+	snapshot_bmp := take_snapshot_custom(pixel_detect_start, pixel_detect_size)
 	;snapshot_bmp := GDIP_BitmapFromScreen("300|300|200|200")
 	if (CalibMode || adhd_debug_mode){
 		show_snapshot()
@@ -1130,13 +1239,21 @@ take_snapshot(){
 	return
 }
 
+show_snapshot_calib(img){
+	global hSnapshotCalib
+
+	hBitmap := Gdip_CreateHBITMAPFromBitmap(img)
+	SendMessage, 0x172, 0, hBitmap, , ahk_id %hSnapshotCalib% ; STM_SETIMAGE = 0x172
+	return
+}
+
 ;Shows the snapshot area in the gui
 show_snapshot(){
 	global snapshot_bmp
-	global hPic
+	global hSnapshotMain
 
 	hBitmap := Gdip_CreateHBITMAPFromBitmap(snapshot_bmp)
-	SendMessage, 0x172, 0, hBitmap, , ahk_id %hPic% ; STM_SETIMAGE = 0x172
+	SendMessage, 0x172, 0, hBitmap, , ahk_id %hSnapshotMain% ; STM_SETIMAGE = 0x172
 	return
 }
 
