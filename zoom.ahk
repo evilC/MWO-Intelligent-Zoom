@@ -408,87 +408,98 @@ detect_coordinates(){
 
 	; Detect best coordinates for each zoom
 
-	cache_zooms := Object()
-	cache_zooms.insert([])
+	; ToDo: cache_zooms does not need to be object of objects?
+	cache_zooms := Object()		; A cache for each pixel in the box to store yes/no 
 
-	; when making actual loop, ensure oz starts at level we are comparing against.
-	oz := 2
+	detected_coords := Object()
+	Loop, % num_snapshots {
+		; Try to find a pixel for each zoom level
+		oz := A_Index
+		cache_zooms.insert([])
 
-	Loop, 10 {
-		; Gradually loosen up the tolerance
-		zt := A_Index - 1
-		ot := A_Index
-
-		tol := ot * 10
-		detected_coords := Object()
 		detected_coords.insert([])
-		detected_coords.insert([])
-		detected_coords.insert([])
-		detected_coords.insert([])
+		; Basic handled by other loop for now
+		if (oz == 1){
+			continue
+		}
 
-		snapshot_idx := oz - 1
-		snapshot_ctr := 0
+		Loop, 10 {
+			; Gradually loosen up the tolerance
+			zt := A_Index - 1
+			ot := A_Index
 
-		Loop, % num_snapshots {
-			; Loop through each snapshot
-			cache_zooms[1].insert([])
-			;snapshot_idx := A_Index
-			snapshot_idx++
-			if (snapshot_idx > num_snapshots){
-				snapshot_idx := 1
-			}
-			snapshot_ctr++
+			tol := ot * 10
 
-			Loop, % pixel_detect_size[1] {
-				; pixel loop - x
-				zx := A_Index - 1	; used for zero-based indexes
-				ox := A_Index		; used for one-based indexes
-				cache_zooms[1][A_Index].insert([])
-				Loop, % pixel_detect_size[2] {
-					; pixel loop - y
-					zy := A_Index - 1
-					oy := A_Index
+			snapshot_idx := oz - 1
+			snapshot_ctr := 0
 
-					if (snapshot_idx != oz){
-						; if not the base level...
-						if (cache_zooms[1][ox,oy] == 0){
-							; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
-							continue
+			Loop, % num_snapshots {
+				; Loop through each snapshot
+				cache_zooms[oz].insert([])
+				snapshot_idx++
+				if (snapshot_idx > num_snapshots){
+					snapshot_idx := 1
+				}
+				snapshot_ctr++
+
+				Loop, % pixel_detect_size[1] {
+					; pixel loop - x
+					zx := A_Index - 1	; used for zero-based indexes
+					ox := A_Index		; used for one-based indexes
+					cache_zooms[oz][A_Index].insert([])
+					Loop, % pixel_detect_size[2] {
+						; pixel loop - y
+						zy := A_Index - 1
+						oy := A_Index
+
+						if (snapshot_idx != oz){
+							; if not the base level...
+							if (cache_zooms[oz][ox,oy] == 0){
+								; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
+								continue
+							}
 						}
+
+						val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
+						val := ToRGB(val)
+
+						cmp := Compare(val, rgb_default, tol)
+
+						if (snapshot_idx == oz){
+							; If this is the base snapshot, store true/false value of compare
+							cache_zooms[oz][ox,oy] := cmp
+						} else {
+							; The pixel passed the base check.
+							; A further match means pixel is not unique, a fail is good. So invert value of cmp
+							cache_zooms[oz][ox,oy] := !cmp
+						}
+
+						; Detect success
+						if (cache_zooms[oz][ox,oy] && (snapshot_ctr == num_snapshots)){
+							; This pixel is a match
+							detected_coords[oz].insert([ox,oy])
+							;if (oz != 2){
+							;	ADHD.debug("Z: " oz " - " snapx_to_screen(ox) "," snapy_to_screen(oy))
+							;}
+						}
+
 					}
-
-					val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
-					val := ToRGB(val)
-
-					cmp := Compare(val, rgb_default, tol)
-
-					if (snapshot_idx == oz){
-						; If this is the base snapshot, store true/false value of compare
-						cache_zooms[1][ox,oy] := cmp
-					} else {
-						; The pixel passed the base check.
-						; A further match means pixel is not unique, a further fail is good. So invert value of cmp
-						cache_zooms[1][ox,oy] := !cmp
-					}
-
-					; Detect success
-					if (cache_zooms[1][ox,oy] && (snapshot_ctr == num_snapshots)){
-						; This pixel is a match
-						detected_coords[oz].insert([ox,oy])
-					}
-
 				}
 			}
-		}
-		; Stop once we have a match
-		if (detected_coords[snapshot_idx].MaxIndex()){
-			break
+			; Stop once we have a match
+			if (detected_coords[oz].MaxIndex()){
+				break
+			}
 		}
 	}
 
 	if (detected_coords[2].MaxIndex()){
 		Loop, % detected_coords[2].MaxIndex() {
 			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[2][A_Index,1]) "," snapy_to_screen(detected_coords[2][A_Index,2])
+			; ToDo: pick best match
+		}
+		Loop, % detected_coords[3].MaxIndex() {
+			msgbox % "CONTENDER - 3.0x (" tol "): " snapx_to_screen(detected_coords[3][A_Index,1]) "," snapy_to_screen(detected_coords[3][A_Index,2])
 			; ToDo: pick best match
 		}
 	}
