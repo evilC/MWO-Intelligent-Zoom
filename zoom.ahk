@@ -421,6 +421,10 @@ detect_coordinates(){
 
 		tol := ot * 10
 		detected_coords := Object()
+		detected_coords.insert([])
+		detected_coords.insert([])
+		detected_coords.insert([])
+		detected_coords.insert([])
 
 		snapshot_idx := oz - 1
 		snapshot_ctr := 0
@@ -470,21 +474,21 @@ detect_coordinates(){
 					; Detect success
 					if (cache_zooms[1][ox,oy] && (snapshot_ctr == num_snapshots)){
 						; This pixel is a match
-						detected_coords.insert([ox,oy])
+						detected_coords[oz].insert([ox,oy])
 					}
 
 				}
 			}
 		}
 		; Stop once we have a match
-		if (detected_coords.MaxIndex()){
+		if (detected_coords[snapshot_idx].MaxIndex()){
 			break
 		}
 	}
 
-	if (detected_coords.MaxIndex()){
-		Loop, % detected_coords.MaxIndex() {
-			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
+	if (detected_coords[2].MaxIndex()){
+		Loop, % detected_coords[2].MaxIndex() {
+			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[2][A_Index,1]) "," snapy_to_screen(detected_coords[2][A_Index,2])
 			; ToDo: pick best match
 		}
 	}
