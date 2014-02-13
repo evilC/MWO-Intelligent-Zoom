@@ -317,6 +317,7 @@ calibrate_colour(row){
 	return
 
 detect_coordinates(){
+	global ADHD
 	global snapshot_bmp
 	global ZoomKey
 	global default_colour
@@ -343,8 +344,6 @@ detect_coordinates(){
 	cache_basic := Object()
 
 	num_snapshots := 3
-	best_match := Object()
-	best_match.insert([])
 
 	Loop, 10 {
 		; Gradually loosen up the tolerance
@@ -360,14 +359,17 @@ detect_coordinates(){
 			snapshot_idx := A_Index
 
 			Loop, % pixel_detect_size[1] {
+				; pixel loop - x
 				zx := A_Index - 1	; used for zero-based indexes
 				ox := A_Index		; used for one-based indexes
 				cache_basic[A_Index].insert([])
 				Loop, % pixel_detect_size[2] {
+					; pixel loop - y
 					zy := A_Index - 1
 					oy := A_Index
 
 					if (snapshot_idx != 1){
+						; if not the base level...
 						if (cache_basic[ox,oy] == 0){
 							; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
 							continue
@@ -377,12 +379,12 @@ detect_coordinates(){
 					val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
 					val := ToRGB(val)
 
-					diff := round(Diff(val, rgb_default))
-					cmp := Compare(val, rgb_default,tol)
+					cmp := Compare(val, rgb_default, tol)
 
 					cache_basic[ox,oy] := cmp
 
-					if (snapshot_idx == num_snapshots){
+					; Detect success
+					if (cache_basic[ox,oy] && (snapshot_idx == num_snapshots)){
 						; This pixel is a match
 						detected_coords.insert([ox,oy])
 					}
@@ -397,26 +399,97 @@ detect_coordinates(){
 
 	if (detected_coords.MaxIndex()){
 		Loop, % detected_coords.MaxIndex() {
-			msgbox % "CONTENDER (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
+			msgbox % "CONTENDER - BASIC (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
+			; ToDo: pick best match
 		}
 	}
 
 	;msgbox % "Best basic pixel: " snapx_to_screen(best_match[1]) "," snapy_to_screen(best_match[2])
 
-	/*
 	; Detect best coordinates for each zoom
 
-	Loop, % num_snapshots {
-		snapshot_idx := A_Index
-		Loop, % pixel_detect_size[1] {
-			zx := A_Index - 1	; used for zero-based indexes
-			ox := A_Index		; used for one-based indexes
-			Loop, % pixel_detect_size[2] {
+	cache_zooms := Object()
+	cache_zooms.insert([])
 
+	; when making actual loop, ensure oz starts at level we are comparing against.
+	oz := 2
+
+	Loop, 10 {
+		; Gradually loosen up the tolerance
+		zt := A_Index - 1
+		ot := A_Index
+
+		tol := ot * 10
+		detected_coords := Object()
+
+		snapshot_idx := oz - 1
+		snapshot_ctr := 0
+
+		Loop, % num_snapshots {
+			; Loop through each snapshot
+			cache_zooms[1].insert([])
+			;snapshot_idx := A_Index
+			snapshot_idx++
+			if (snapshot_idx > num_snapshots){
+				snapshot_idx := 1
+			}
+			snapshot_ctr++
+
+			Loop, % pixel_detect_size[1] {
+				; pixel loop - x
+				zx := A_Index - 1	; used for zero-based indexes
+				ox := A_Index		; used for one-based indexes
+				cache_zooms[1][A_Index].insert([])
+				Loop, % pixel_detect_size[2] {
+					; pixel loop - y
+					zy := A_Index - 1
+					oy := A_Index
+
+					if (snapshot_idx != oz){
+						; if not the base level...
+						if (cache_zooms[1][ox,oy] == 0){
+							; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
+							continue
+						}
+					}
+
+					val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
+					val := ToRGB(val)
+
+					cmp := Compare(val, rgb_default, tol)
+
+					if (snapshot_idx == oz){
+						; If this is the base snapshot, store true/false value of compare
+						cache_zooms[1][ox,oy] := cmp
+					} else {
+						; The pixel passed the base check.
+						; A further match means pixel is not unique, a further fail is good. So invert value of cmp
+						cache_zooms[1][ox,oy] := !cmp
+					}
+
+					; Detect success
+					if (cache_zooms[1][ox,oy] && (snapshot_ctr == num_snapshots)){
+						; This pixel is a match
+						detected_coords.insert([ox,oy])
+					}
+
+				}
 			}
 		}
+		; Stop once we have a match
+		if (detected_coords.MaxIndex()){
+			break
+		}
 	}
-	*/	
+
+	if (detected_coords.MaxIndex()){
+		Loop, % detected_coords.MaxIndex() {
+			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
+			; ToDo: pick best match
+		}
+	}
+
+		
 }
 
 snapx_to_screen(coord){
