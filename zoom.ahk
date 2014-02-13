@@ -174,21 +174,24 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 pToken := Gdip_Startup()
 
 ; Add Calibration Popup (Debug window is 2, so window 3)
-Gui, 3:Add, Text, x5 y5 w300 h40, Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah Blah 
+Gui, 3:Add, Text, x5 y5 w300 h40, Use the buttons to select the HUD Zoom element. Select the smallest possible area that shows all the numbers. 
 
-Gui, 3:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
-Gui, 3:Add, Radio, x5 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
-Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 10
-Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 5
-Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 2
-Gui, 3:Add, Radio, xp+70 yp gCalibStepRateChanged, 1
+Gui, 3:Add, Groupbox, x5 yp+45 w300 h40, Step Size
+;Gui, 3:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
+Gui, 3:Add, Radio, x10 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
+Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 10
+Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 5
+Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 2
+Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 1
 
 xpos := 60
-ypos := 90
+ypos := 115
 xp1 := xpos - 45
 xp2 := xpos + 45
 yp1 := ypos + 20
 yp2 := ypos + 40
+yp3 := ypos - 20
+Gui, 3:Add, Groupbox, x5 y%yp3% w148 h100, RESIZE
 Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
 Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
 Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
@@ -197,6 +200,7 @@ Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSna
 xpos := 210
 xp1 := xpos - 45
 xp2 := xpos + 45
+Gui, 3:Add, Groupbox, x155 y%yp3% w150 h100, MOVE
 Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
 Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
 Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
@@ -206,7 +210,7 @@ Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapsh
 ;Gui, 3:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
 Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
 ;Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
-Gui, 3:Add, Button, x5 yp+150 gDetectCoordinates, Detect Coordinates
+Gui, 3:Add, Button, center x5 w300 yp+160 gDetectCoordinates, Proceed to the next step - Detect Coordinates
 
 ADHD.finish_startup()
 
@@ -507,8 +511,8 @@ center_calib_snapshot(){
 	outx := (150 - round(outw / 2))
 	outy := (125 - round(outh / 2))
 
-	outx += 2
-	outy += 120
+	outx += 5
+	outy += 150
 
 	Guicontrol, 3:Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
 
