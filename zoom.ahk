@@ -345,78 +345,20 @@ detect_coordinates(){
 
 	num_snapshots := 3
 
-	Loop, 10 {
-		; Gradually loosen up the tolerance
-		zt := A_Index - 1
-		ot := A_Index
-
-		tol := ot * 10
-		detected_coords := Object()
-
-		Loop, % num_snapshots {
-			; Loop through each snapshot
-			cache_basic.insert([])
-			snapshot_idx := A_Index
-
-			Loop, % pixel_detect_size[1] {
-				; pixel loop - x
-				zx := A_Index - 1	; used for zero-based indexes
-				ox := A_Index		; used for one-based indexes
-				cache_basic[A_Index].insert([])
-				Loop, % pixel_detect_size[2] {
-					; pixel loop - y
-					zy := A_Index - 1
-					oy := A_Index
-
-					if (snapshot_idx != 1){
-						; if not the base level...
-						if (cache_basic[ox,oy] == 0){
-							; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
-							continue
-						}
-					}
-
-					val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
-					val := ToRGB(val)
-
-					cmp := Compare(val, rgb_default, tol)
-
-					cache_basic[ox,oy] := cmp
-
-					; Detect success
-					if (cache_basic[ox,oy] && (snapshot_idx == num_snapshots)){
-						; This pixel is a match
-						detected_coords.insert([ox,oy])
-					}
-				}
-			}
-		}
-		; Stop once we have a match
-		if (detected_coords.MaxIndex()){
-			break
-		}
-	}
-
-	if (detected_coords.MaxIndex()){
-		Loop, % detected_coords.MaxIndex() {
-			msgbox % "CONTENDER - BASIC (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
-			; ToDo: pick best match
-		}
-	}
-
-	;msgbox % "Best basic pixel: " snapx_to_screen(best_match[1]) "," snapy_to_screen(best_match[2])
-
 	; Detect best coordinates for each zoom
-
 	detected_coords := Object()
 	Loop, % num_snapshots {
-		; Try to find a pixel for each zoom level
+		; Try to find a pixel for each zoom level that best matches the given colour
+		; 1: Basic - A Pixel that always matches
+		; 2: A Pixel that only matches in 1.5x zoom
+		; 3: A Pixel that only matches in 3.0x zoom
+		; 4: A Pixel that only matches in 4.0x zoom
 		oz := A_Index
 
 		detected_coords.insert([])
 		; Basic handled by other loop for now
 		if (oz == 1){
-			continue
+			;continue
 		}
 
 		Loop, 10 {
@@ -464,13 +406,21 @@ detect_coordinates(){
 
 						cmp := Compare(val, rgb_default, tol)
 
-						if (snapshot_idx == oz){
-							; If this is the base snapshot, store true/false value of compare
+						if (oz == 1){
+							; Base layer is Basic
+							; Expecting ALL layers to be a match
 							detection_cache[ox,oy] := cmp
 						} else {
-							; The pixel passed the base check.
-							; A further match means pixel is not unique, a fail is good. So invert value of cmp
-							detection_cache[ox,oy] := !cmp
+							; Base layer is 1.5x, 3.0x, 4x
+							; Expecting base layer (oz) to be a match, subseqent layers to NOT be a match
+							if (snapshot_idx == oz){
+								; If this is the base snapshot, store true/false value of compare
+								detection_cache[ox,oy] := cmp
+							} else {
+								; The pixel passed the base check.
+								; A further match means pixel is not unique, a fail is good. So invert value of cmp
+								detection_cache[ox,oy] := !cmp
+							}
 						}
 
 						; Detect success
@@ -478,7 +428,6 @@ detect_coordinates(){
 							; This pixel is a match
 							detected_coords[oz].insert([ox,oy])
 						}
-
 					}
 				}
 			}
@@ -489,7 +438,11 @@ detect_coordinates(){
 		}
 	}
 
-	if (detected_coords[2].MaxIndex()){
+	;if (detected_coords[2].MaxIndex()){
+		Loop, % detected_coords[1].MaxIndex() {
+			msgbox % "CONTENDER - Basic (" tol "): " snapx_to_screen(detected_coords[1][A_Index,1]) "," snapy_to_screen(detected_coords[1][A_Index,2])
+			; ToDo: pick best match
+		}
 		Loop, % detected_coords[2].MaxIndex() {
 			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[2][A_Index,1]) "," snapy_to_screen(detected_coords[2][A_Index,2])
 			; ToDo: pick best match
@@ -498,7 +451,7 @@ detect_coordinates(){
 			msgbox % "CONTENDER - 3.0x (" tol "): " snapx_to_screen(detected_coords[3][A_Index,1]) "," snapy_to_screen(detected_coords[3][A_Index,2])
 			; ToDo: pick best match
 		}
-	}
+	;}
 
 		
 }
