@@ -323,27 +323,40 @@ detect_coordinates(){
 	global default_colour
 	global pixel_detect_size
 	global pixel_detect_start
-
-	;tol := 40	; ToDo: use tol value from GUI
-
-	; Build cache of the 3 zooms
-	snapshots := Object()
-	Loop, 3 {
-		take_snapshot()
-		show_snapshot()
-		snapshots.insert(snapshot_bmp)
-		Send {%ZoomKey%}
-		Sleep, 1000
-	}
+	global AdvZoom
+	global AdvZoomKey
 
 	rgb_default := ToRGB("0x" default_colour)
 
+	; Build cache of the 3 zooms
+	snapshots := Object()
+
+	if (AdvZoom){
+		num_snapshots := 4
+	} else {
+		num_snapshots := 3
+	}
+
+	Loop, % num_snapshots {
+		take_snapshot()
+		show_snapshot()
+		snapshots.insert(snapshot_bmp)
+		if (A_Index == num_snapshots){
+			; return to zoom 1
+			Send {%ZoomKey%}
+		} else {
+			if (num_snapshots == 4 && A_Index == num_snapshots - 1){
+				Send {%AdvZoomKey%}
+			} else {
+				Send {%ZoomKey%}
+			}
+		}
+		Sleep, 1000
+	}
+
 	; Search for a pixel common to all zooms
 
-	min_diff := 999999
 	cache_basic := Object()
-
-	num_snapshots := 3
 
 	; Detect best coordinates for each zoom
 	detected_coords := Object()
@@ -438,22 +451,13 @@ detect_coordinates(){
 		}
 	}
 
-	;if (detected_coords[2].MaxIndex()){
+	Loop, % num_snapshots {
+		ctr := A_Index
 		Loop, % detected_coords[1].MaxIndex() {
-			msgbox % "CONTENDER - Basic (" tol "): " snapx_to_screen(detected_coords[1][A_Index,1]) "," snapy_to_screen(detected_coords[1][A_Index,2])
+			msgbox % "CONTENDER - " ctr " (" tol "): " snapx_to_screen(detected_coords[ctr][A_Index,1]) "," snapy_to_screen(detected_coords[ctr][A_Index,2])
 			; ToDo: pick best match
 		}
-		Loop, % detected_coords[2].MaxIndex() {
-			msgbox % "CONTENDER - 1.5x (" tol "): " snapx_to_screen(detected_coords[2][A_Index,1]) "," snapy_to_screen(detected_coords[2][A_Index,2])
-			; ToDo: pick best match
-		}
-		Loop, % detected_coords[3].MaxIndex() {
-			msgbox % "CONTENDER - 3.0x (" tol "): " snapx_to_screen(detected_coords[3][A_Index,1]) "," snapy_to_screen(detected_coords[3][A_Index,2])
-			; ToDo: pick best match
-		}
-	;}
-
-		
+	}
 }
 
 snapx_to_screen(coord){
