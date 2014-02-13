@@ -323,7 +323,7 @@ detect_coordinates(){
 	global pixel_detect_size
 	global pixel_detect_start
 
-	tol := 40	; ToDo: use tol value from GUI
+	;tol := 40	; ToDo: use tol value from GUI
 
 	; Build cache of the 3 zooms
 	snapshots := Object()
@@ -346,37 +346,62 @@ detect_coordinates(){
 	best_match := Object()
 	best_match.insert([])
 
-	Loop, % num_snapshots {
-		cache_basic.insert([])
-		snapshot_idx := A_Index
-		Loop, % pixel_detect_size[1] {
-			zx := A_Index - 1	; used for zero-based indexes
-			ox := A_Index		; used for one-based indexes
-			cache_basic[A_Index].insert([])
-			Loop, % pixel_detect_size[2] {
-				zy := A_Index - 1
-				oy := A_Index
-				diff := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
-				diff := round(Diff(ToRGB(diff), rgb_default))
+	Loop, 10 {
+		; Gradually loosen up the tolerance
+		zt := A_Index - 1
+		ot := A_Index
 
-				if (snapshot_idx == 1){
-					cache_basic[ox,oy] := 0
-				}
+		tol := ot * 10
+		detected_coords := Object()
 
-				cache_basic[ox,oy] += diff
+		Loop, % num_snapshots {
+			; Loop through each snapshot
+			cache_basic.insert([])
+			snapshot_idx := A_Index
 
-				if (snapshot_idx == num_snapshots){
-					if (cache_basic[ox,oy] < min_diff){
-						min_diff := diff
-						best_match[1] := ox
-						best_match[2] := oy
+			Loop, % pixel_detect_size[1] {
+				zx := A_Index - 1	; used for zero-based indexes
+				ox := A_Index		; used for one-based indexes
+				cache_basic[A_Index].insert([])
+				Loop, % pixel_detect_size[2] {
+					zy := A_Index - 1
+					oy := A_Index
+
+					if (snapshot_idx != 1){
+						if (cache_basic[ox,oy] == 0){
+							; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
+							continue
+						}
+					}
+
+					val := pixel_get_color(pixel_detect_start[1] + zx, pixel_detect_start[2] + zy, snapshots[snapshot_idx])
+					val := ToRGB(val)
+
+					diff := round(Diff(val, rgb_default))
+					cmp := Compare(val, rgb_default,tol)
+
+					cache_basic[ox,oy] := cmp
+
+					if (snapshot_idx == num_snapshots){
+						; This pixel is a match
+						detected_coords.insert([ox,oy])
 					}
 				}
 			}
 		}
+		; Stop once we have a match
+		if (detected_coords.MaxIndex()){
+			break
+		}
 	}
 
-	msgbox % "Best basic pixel: " snapx_to_screen(best_match[1]) "," snapy_to_screen(best_match[2])
+	if (detected_coords.MaxIndex()){
+		Loop, % detected_coords.MaxIndex() {
+			msgbox % "CONTENDER (" tol "): " snapx_to_screen(detected_coords[A_Index,1]) "," snapy_to_screen(detected_coords[A_Index,2])
+		}
+	}
+
+	;msgbox % "Best basic pixel: " snapx_to_screen(best_match[1]) "," snapy_to_screen(best_match[2])
 
 	/*
 	; Detect best coordinates for each zoom
