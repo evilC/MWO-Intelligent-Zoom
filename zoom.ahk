@@ -469,7 +469,6 @@ calibration_mode(){
 	;IfMsgBox, No
 	;	return
 
-	/*
 	; Work out rough area of Zoom HUD element
 	half_width := round(curr_size.w / 2)
 	half_height := round(curr_size.h / 2)
@@ -480,10 +479,9 @@ calibration_mode(){
 
 	calib_offset := Array(x_coord-150,y_coord-75)
 	calib_size := Array(300,150)
-	*/
 
-	calib_offset := Array(1289,828)
-	calib_size := Array(27,20)
+	;calib_offset := Array(1289,828)
+	;calib_size := Array(27,20)
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
