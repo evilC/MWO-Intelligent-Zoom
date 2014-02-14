@@ -463,25 +463,27 @@ calibration_mode(){
 		return
 	}
 
-	;msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
+	debug := 0
 
-	;IfMsgBox, No
-	;	return
-	/*
-	; Work out rough area of Zoom HUD element
-	half_width := round(curr_size.w / 2)
-	half_height := round(curr_size.h / 2)
+	if (debug){
+		calib_offset := Array(1289,828)
+		calib_size := Array(27,20)
+	} else {
+		msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
 
-	x_coord := round((half_width / 2.7826086957) + half_width)
-	y_coord := round((half_width / 3.9669421488) + half_height)
+		IfMsgBox, No
+			return
 
+		; Work out rough area of Zoom HUD element
+		half_width := round(curr_size.w / 2)
+		half_height := round(curr_size.h / 2)
 
-	calib_offset := Array(x_coord-150,y_coord-75)
-	calib_size := Array(300,150)
-	*/
+		x_coord := round((half_width / 2.7826086957) + half_width)
+		y_coord := round((half_width / 3.9669421488) + half_height)
 
-	calib_offset := Array(1289,828)
-	calib_size := Array(27,20)
+		calib_offset := Array(x_coord-150,y_coord-75)
+		calib_size := Array(300,150)
+	}
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
@@ -948,7 +950,7 @@ do_zoom(dir){
 				if (current_zoom != desired_zoom){
 					; Unexpected zoom
 					;ADHD.debug("Expected zoom " desired_zoom ", got zoom " current_zoom " (Try #" tried_zoom ")")
-					debug_line .= "Expecting zoom " desired zoom ", detected zoom " current_zoom " (Try #" tried_zoom "), "
+					debug_line .= "Expecting zoom " desired_zoom ", detected zoom " current_zoom " (Try #" tried_zoom "), "
 					if (tried_zoom < 3){
 						debug_line .= "Trying again."
 						ADHD.debug(debug_line)
