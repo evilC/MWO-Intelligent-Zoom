@@ -430,7 +430,6 @@ calibration_mode(){
 	global calib_offset
 	global calib_size
 
-
 	if (!adhd_limit_application_on){
 		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
 		return
@@ -532,14 +531,13 @@ detect_coordinates(){
 	global snapshot_calib
 	global ZoomKey
 	global default_colour
-	global pixel_detect_size
-	global pixel_detect_start
 	global AdvZoom
 	global AdvZoomKey
 	global adhd_limit_application_on
 	global adhd_limit_application
 	global calib_offset
 	global calib_size
+	global calib_list
 
 	; Detect pixels
 	; Build cache of the 3 zooms
@@ -565,7 +563,6 @@ detect_coordinates(){
 	}
 
 	;msgbox % calib_offset[1] "," calib_offset[2] " - " calib_size[1] "x" calib_size[2]
-	;msgbox % pixel_detect_start[1] "," pixel_detect_start[2] " - " pixel_detect_size[1] "x" pixel_detect_size[2]
 
 	Loop, % num_snapshots {
 		snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
@@ -672,7 +669,8 @@ detect_coordinates(){
 						; Detect success
 						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
 							; This pixel is a match - store information on match
-							detected_coords[oz].insert([ox,oy,Diff(val, rgb_default),pixel_colour])
+							;detected_coords[oz].insert([ox,oy,Diff(val, rgb_default),pixel_colour])
+							detected_coords[oz].insert([zx,zy,Diff(val, rgb_default),pixel_colour])
 						}
 					}
 				}
@@ -710,8 +708,36 @@ detect_coordinates(){
 	; We now have a best match for each zoom level (x,y, colour), plus tol is the tolerance we got a match on.
 	Loop, % num_snapshots {
 		ctr := A_Index
-		msgbox % "Match found for tolerance " tol ".`nZoom " ctr ": " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
+		;msgbox % "Match found for tolerance " tol ".`nZoom " ctr ": " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
 	}
+
+	;msgbox,4,,% "Detected " curr_size.w "x" curr_size.h " Resolution.`n`nWarning! This process will overwrite the current profile.`nIf you wish to preserve the current profile, click Cancel, then add a new profile in the Profiles tab.`n`nThis feature is experimental - if it does not work for you, please make a post on the Homepage.`n`nDo you wish to continue?"
+	msgbox,4,,% "Valid coordinates found. Copy to profile?"
+
+	IfMsgBox, No
+		return
+
+	Loop, % num_snapshots {
+		ctr := A_Index
+		;msgbox % "Match found for tolerance " tol ".`nZoom " ctr ": " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
+		ctrl := calib_list[ctr] "X"
+		tmp := snapx_to_screen(matches[ctr,1])
+		;msgbox % ctrl "-" tmp
+		GuiControl,1:,%ctrl%,%tmp%
+
+		ctrl := calib_list[ctr] "Y"
+		tmp := snapy_to_screen(matches[ctr,2])
+		GuiControl,1:,%ctrl%,%tmp%
+
+		ctrl := calib_list[ctr] "Col"
+		tmp := substr(matches[ctr,4],3)
+		GuiControl,1:,%ctrl%,%tmp%
+
+		ctrl := calib_list[ctr] "Tol"
+		tmp := tol
+		GuiControl,1:,%ctrl%,%tmp%
+	}
+
 }
 
 ; resizes the calibration snapshot
@@ -794,7 +820,8 @@ snapshot_to_screen(coord,ctype){
 	;global pixel_detect_start
 	global calib_offset
 	;return coord - 1 + pixel_detect_start[ctype]
-	return coord - 1 + calib_offset[ctype]
+	;return coord - 1 + calib_offset[ctype]
+	return coord + calib_offset[ctype]
 }
 
 
