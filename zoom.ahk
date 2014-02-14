@@ -538,6 +538,8 @@ detect_coordinates(){
 	global calib_offset
 	global calib_size
 	global calib_list
+	global pixel_detect_start
+	global pixel_detect_size
 
 	; Detect pixels
 	; Build cache of the 3 zooms
@@ -608,7 +610,7 @@ detect_coordinates(){
 			zt := A_Index - 1
 			ot := A_Index
 
-			tol := ot * 10
+			tol := ot * 5
 
 			; Init vars for each tolerance run
 			snapshot_idx := oz - 1
@@ -652,7 +654,8 @@ detect_coordinates(){
 
 						if (oz != 1 && snapshot_idx != oz){
 							; For comparisons where we want other pixels to NOT match the base snapshot, up the tolerance for matching to exclude pixels that are very similar on other layers
-							tmptol := tol + 10
+							;tmptol := tol + 10
+							tmptol := tol + 20
 						} else {
 							tmptol := tol
 						}
@@ -753,9 +756,12 @@ detect_coordinates(){
 		GuiControl,1:,%ctrl%,%tmp%
 
 		ctrl := calib_list[ctr] "Tol"
-		tmp := matches[ctr,5]
+		tmp := matches[ctr,5] + 10
 		GuiControl,1:,%ctrl%,%tmp%
 	}
+
+	pixel_detect_start := calib_offset
+	pixel_detect_size := calib_size
 
 }
 
@@ -1462,28 +1468,35 @@ ToRGB(color) {
 ; Compares r/g/b integer objects, with a tolerance
 ; returns true or false
 Compare(c1, c2, tol := 20) {
-	/*
 	diff := Abs( c1.r - c2.r ) "," Abs( c1.g - c2.g ) "," Abs( c1.b - c2.b )
 	sort diff,N D,
 
 	StringSplit, diff, diff, `,
 	return diff%diff0% < tol
-	*/
+	/*
     rdiff := Abs( c1.r - c2.r )
     gdiff := Abs( c1.g - c2.g )
     bdiff := Abs( c1.b - c2.b )
 
-    ;return rdiff <= tol && gdiff <= tol && bdiff <= tol
-    return (rdiff + gdiff + bdiff) <= tol
+    return rdiff <= tol && gdiff <= tol && bdiff <= tol
+    ;return (rdiff + gdiff + bdiff) <= tol
+    */
 }
 
 Diff(c1,c2){
+	/*
     rdiff := Abs( c1.r - c2.r )
     gdiff := Abs( c1.g - c2.g )
     bdiff := Abs( c1.b - c2.b )
 
     ;return (rdiff + gdiff + bdiff) / 3
     return rdiff + gdiff + bdiff
+    */
+	diff := Abs( c1.r - c2.r ) "," Abs( c1.g - c2.g ) "," Abs( c1.b - c2.b )
+	sort diff,N D,
+
+	StringSplit, diff, diff, `,
+	return diff%diff0% < tol
 }
 
 ARGBtoRGB( ARGB ){
