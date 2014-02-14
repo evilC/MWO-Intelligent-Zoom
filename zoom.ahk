@@ -590,7 +590,8 @@ detect_coordinates(){
 	; Detect best coordinates for each zoom
 	detected_coords := Object()
 	Loop, % num_snapshots {
-		; Try to find a pixel for each zoom level that best matches the given colour
+		; Loop through each of the snapshots as a "Base" SnapShot
+
 		; 1: Basic - A Pixel that always matches
 		; 2: A Pixel that only matches in 1.5x zoom
 		; 3: A Pixel that only matches in 3.0x zoom
@@ -620,7 +621,7 @@ detect_coordinates(){
 			;ADHD.debug("`nTOL: " tol)
 
 			Loop, % num_snapshots {
-				; Loop through each snapshot
+				; Loop through each snapshot, comparing to the "Base" snapshot
 				snapshot_idx++
 				if (snapshot_idx > num_snapshots){
 					snapshot_idx := 1
@@ -638,7 +639,7 @@ detect_coordinates(){
 						oy := A_Index
 
 						if (snapshot_idx != oz){
-							; if not the base level...
+							; if not the base snapshot...
 							if (detection_cache[ox,oy] == 0){
 								; If pixel was marked as not a possibility for previous snapshot, ignore and set next snapshot to ignore
 								continue
@@ -649,7 +650,14 @@ detect_coordinates(){
 						pixel_colour := snapshot_get_color(zx,zy, snapshots[snapshot_idx])
 						val := ToRGB(pixel_colour)
 
-						cmp := Compare(val, rgb_default, tol)
+						if (oz != 1 && snapshot_idx != oz){
+							; For comparisons where we want other pixels to NOT match the base snapshot, up the tolerance for matching to exclude pixels that are very similar on other layers
+							tmptol := tol + 10
+						} else {
+							tmptol := tol
+						}
+						;cmp := Compare(val, rgb_default, tol)
+						cmp := Compare(val, rgb_default, tmptol)
 
 						if (oz == 1){
 							; Base layer is Basic
