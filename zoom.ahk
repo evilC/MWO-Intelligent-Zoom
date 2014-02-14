@@ -683,11 +683,17 @@ detect_coordinates(){
 		}
 	}
 
+	fails := 0
+
 	; Pick the closest match from each zoom level
 	matches := Object()
 	Loop, % num_snapshots {
 		ctr := A_Index
 		matches.insert([])
+		if (!detected_coords[ctr].MaxIndex()){
+			fails++
+			break
+		}
 		Loop, % detected_coords[ctr].MaxIndex() {
 			if (matches[ctr,A_Index,3] == "" || detected_coords[ctr][A_Index,3] < matches[ctr,A_Index,3]){
 				matches[ctr] := detected_coords[ctr,A_Index]
@@ -695,10 +701,15 @@ detect_coordinates(){
 		}
 	}
 
+	if (fails){
+		msgbox % "Detection Failed. Aborting"
+		return
+	}
+
 	; We now have a best match for each zoom level (x,y, colour), plus tol is the tolerance we got a match on.
 	Loop, % num_snapshots {
 		ctr := A_Index
-		msgbox % "CONTENDER - " ctr " (" tol "): " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
+		msgbox % "Match found for tolerance " tol ".`nZoom " ctr ": " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
 	}
 }
 
