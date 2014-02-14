@@ -598,12 +598,11 @@ detect_coordinates(){
 		oz := A_Index
 
 		detected_coords.insert([])
-		; Basic handled by other loop for now
-		if (oz == 1){
-			;continue
-		}
+		;ADHD.debug("`nBASE LAYER: " oz)
 
-		Loop, 10 {
+		valid_pixel_found := 0
+
+		Loop, 5 {
 			; Gradually loosen up the tolerance
 			zt := A_Index - 1
 			ot := A_Index
@@ -614,8 +613,11 @@ detect_coordinates(){
 			snapshot_idx := oz - 1
 			snapshot_ctr := 0
 
+			colour_match := ""
 			detection_cache := Object()		; A cache for each pixel in the box to store yes/no 
 			detection_cache.insert([])
+
+			;ADHD.debug("`nTOL: " tol)
 
 			Loop, % num_snapshots {
 				; Loop through each snapshot
@@ -624,7 +626,7 @@ detect_coordinates(){
 					snapshot_idx := 1
 				}
 				snapshot_ctr++
-
+				;ADHD.debug("Checking snapshot: " snapshot_idx " base zoom: " oz)
 				Loop, % calib_size[1] {
 					; pixel loop - x
 					zx := A_Index - 1	; used for zero-based indexes
@@ -653,12 +655,20 @@ detect_coordinates(){
 							; Base layer is Basic
 							; Expecting ALL layers to be a match
 							detection_cache[ox,oy] := cmp
+							if (cmp){
+								;ADHD.debug("Found Basic match")
+								colour_match := pixel_colour
+							}
 						} else {
 							; Base layer is 1.5x, 3.0x, 4x
 							; Expecting base layer (oz) to be a match, subseqent layers to NOT be a match
 							if (snapshot_idx == oz){
 								; If this is the base snapshot, store true/false value of compare
 								detection_cache[ox,oy] := cmp
+								if (cmp){
+									colour_match := pixel_colour
+									;ADHD.debug("Found zoom match: " oz)
+								}
 							} else {
 								; The pixel passed the base check.
 								; A further match means pixel is not unique, a fail is good. So invert value of cmp
@@ -669,14 +679,15 @@ detect_coordinates(){
 						; Detect success
 						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
 							; This pixel is a match - store information on match
-							;detected_coords[oz].insert([ox,oy,Diff(val, rgb_default),pixel_colour])
-							detected_coords[oz].insert([zx,zy,Diff(val, rgb_default),pixel_colour])
+							detected_coords[oz].insert([zx,zy,Diff(val, rgb_default),colour_match, tol])
+							valid_pixel_found := 1
+							;ADHD.debug("Valid pixel found for zoom " oz)
 						}
 					}
 				}
 			}
-			; Stop once we have a match
-			if (detected_coords[oz].MaxIndex()){
+			; Quit searching when we have a match
+			if (valid_pixel_found){
 				break
 			}
 		}
@@ -734,7 +745,7 @@ detect_coordinates(){
 		GuiControl,1:,%ctrl%,%tmp%
 
 		ctrl := calib_list[ctr] "Tol"
-		tmp := tol
+		tmp := matches[ctr,5]
 		GuiControl,1:,%ctrl%,%tmp%
 	}
 
@@ -1443,11 +1454,19 @@ ToRGB(color) {
 ; Compares r/g/b integer objects, with a tolerance
 ; returns true or false
 Compare(c1, c2, tol := 20) {
+	/*
+	diff := Abs( c1.r - c2.r ) "," Abs( c1.g - c2.g ) "," Abs( c1.b - c2.b )
+	sort diff,N D,
+
+	StringSplit, diff, diff, `,
+	return diff%diff0% < tol
+	*/
     rdiff := Abs( c1.r - c2.r )
     gdiff := Abs( c1.g - c2.g )
     bdiff := Abs( c1.b - c2.b )
 
-    return rdiff <= tol && gdiff <= tol && bdiff <= tol
+    ;return rdiff <= tol && gdiff <= tol && bdiff <= tol
+    return (rdiff + gdiff + bdiff) <= tol
 }
 
 Diff(c1,c2){
@@ -1455,7 +1474,8 @@ Diff(c1,c2){
     gdiff := Abs( c1.g - c2.g )
     bdiff := Abs( c1.b - c2.b )
 
-    return (rdiff + gdiff + bdiff) / 3
+    ;return (rdiff + gdiff + bdiff) / 3
+    return rdiff + gdiff + bdiff
 }
 
 ARGBtoRGB( ARGB ){
@@ -1472,3 +1492,4 @@ ARGBtoRGB( ARGB ){
 
 #Include <Gdip>			; http://www.autohotkey.com/board/topic/29449-gdi-standard-library-145-by-tic/
 ;#Include Gdip.ahk
+ 
