@@ -646,7 +646,8 @@ detect_coordinates(){
 							}
 						}
 
-						pixel_colour := pixel_get_color(calib_offset[1] + zx, calib_offset[2] + zy, snapshots[snapshot_idx])
+						; Use snapshot_get_color not pixel_get_color as pixel_get_color relies on pixel_detect_start not calib_offset !!
+						pixel_colour := snapshot_get_color(zx,zy, snapshots[snapshot_idx])
 						val := ToRGB(pixel_colour)
 
 						cmp := Compare(val, rgb_default, tol)
