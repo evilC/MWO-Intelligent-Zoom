@@ -1367,12 +1367,19 @@ rebuild_coordcache(){
 	global axis_list
 	global pixel_detect_start
 	global pixel_detect_size
+	global AdvZoom
 
 	coords := object()
 	min := Array(999999,999999)
 	max := Array(0,0)
 
-	Loop, 4 {
+	if (AdvZoom){
+		zooms := 4
+	} else {
+		zooms := 3
+	}
+
+	Loop, % zooms {
 		ctr := A_Index
 		coords.insert([])
 		Loop, 2 {
