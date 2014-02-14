@@ -920,6 +920,9 @@ do_zoom(dir){
 	Global zoom_waiting
 	Global current_zoom
 
+	;recheck_delay := 50
+	recheck_delay := 100
+
 	if (dir == 1){
 		dirdesc := "(IN)"
 	} else {
@@ -954,8 +957,8 @@ do_zoom(dir){
 					if (tried_zoom < 3){
 						debug_line .= "Trying again."
 						ADHD.debug(debug_line)
-						; Wait another 50ms and try again
-						sleep, 50
+						; Wait and try again
+						sleep, %recheck_delay%
 						continue
 					} else {
 						; Tried 3 times and failed, give up.
