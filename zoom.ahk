@@ -468,7 +468,7 @@ calibration_mode(){
 
 	;IfMsgBox, No
 	;	return
-
+	/*
 	; Work out rough area of Zoom HUD element
 	half_width := round(curr_size.w / 2)
 	half_height := round(curr_size.h / 2)
@@ -479,9 +479,10 @@ calibration_mode(){
 
 	calib_offset := Array(x_coord-150,y_coord-75)
 	calib_size := Array(300,150)
+	*/
 
-	;calib_offset := Array(1289,828)
-	;calib_size := Array(27,20)
+	calib_offset := Array(1289,828)
+	calib_size := Array(27,20)
 
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
@@ -645,8 +646,8 @@ detect_coordinates(){
 							}
 						}
 
-						val := pixel_get_color(calib_offset[1] + zx, calib_offset[2] + zy, snapshots[snapshot_idx])
-						val := ToRGB(val)
+						pixel_colour := pixel_get_color(calib_offset[1] + zx, calib_offset[2] + zy, snapshots[snapshot_idx])
+						val := ToRGB(pixel_colour)
 
 						cmp := Compare(val, rgb_default, tol)
 
@@ -669,9 +670,8 @@ detect_coordinates(){
 
 						; Detect success
 						if (detection_cache[ox,oy] && (snapshot_ctr == num_snapshots)){
-							; This pixel is a match
-							detected_coords[oz].insert([ox,oy])
-							;ADHD.debug(oz ": " ox "," oy "(" ox + calib_offset[1] "," oy + calib_offset[2] ")")
+							; This pixel is a match - store information on match
+							detected_coords[oz].insert([ox,oy,Diff(val, rgb_default),pixel_colour])
 						}
 					}
 				}
@@ -683,12 +683,22 @@ detect_coordinates(){
 		}
 	}
 
+	; Pick the closest match from each zoom level
+	matches := Object()
 	Loop, % num_snapshots {
 		ctr := A_Index
-		Loop, % detected_coords[1].MaxIndex() {
-			msgbox % "CONTENDER - " ctr " (" tol "): " snapx_to_screen(detected_coords[ctr][A_Index,1]) "," snapy_to_screen(detected_coords[ctr][A_Index,2])
-			; ToDo: pick best match
+		matches.insert([])
+		Loop, % detected_coords[ctr].MaxIndex() {
+			if (matches[ctr,A_Index,3] == "" || detected_coords[ctr][A_Index,3] < matches[ctr,A_Index,3]){
+				matches[ctr] := detected_coords[ctr,A_Index]
+			}
 		}
+	}
+
+	; We now have a best match for each zoom level (x,y, colour), plus tol is the tolerance we got a match on.
+	Loop, % num_snapshots {
+		ctr := A_Index
+		msgbox % "CONTENDER - " ctr " (" tol "): " snapx_to_screen(matches[ctr,1]) "," snapy_to_screen(matches[ctr,2]) " - " matches[ctr,3] "(" matches[ctr,4] ")"
 	}
 }
 

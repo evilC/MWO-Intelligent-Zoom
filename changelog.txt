@@ -13,6 +13,7 @@ Key:
 + New SnapShot preview GUI item.
   Now you can see what the code is looking at - A picture is displayed of the area surrounding the pixels in the coordinate boxes.
 ! The SnapShot preview only shows whilst in Calibration or Debug Mode
+= Clearer debugging info when trying to detect zoom
 
 4.2 9th Feb 2014
 = Calibration mode UI elements should now hide properly when not in calibration mode, or on another tab.
