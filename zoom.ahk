@@ -535,7 +535,6 @@ detect_coordinates(){
 	global default_colour
 	global AdvZoom
 	global AdvZoomKey
-	global adhd_limit_application_on
 	global adhd_limit_application
 	global calib_offset
 	global calib_size
@@ -1119,7 +1118,6 @@ send_adv_zoom(){
 send_zoom(amt){
 	Global ZoomKey
 	Global ZoomDelay
-	Global ADHD
 	
 	;ADHD.debug("Sending Zoom key x" amt)
 	Loop % amt {
