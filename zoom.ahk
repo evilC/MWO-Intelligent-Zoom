@@ -1312,13 +1312,13 @@ calib_mode_changed(){
 	global ADHD
 	global CalibMode
 	
-	Global adhd_current_tab
+	current_tab := ADHD.get_current_tab()
 
 	debug_mode := ADHD.get_debug_mode()
 
 	gui, submit, nohide
 	
-	if ((CalibMode || debug_mode) && adhd_current_tab == "Main"){
+	if ((CalibMode || debug_mode) && current_tab == "Main"){
 		Guicontrol, -hidden, DetZoomLab
 		Guicontrol, -hidden, CurrentZoom
 		;Guicontrol, -hidden, DetectCoordinates
