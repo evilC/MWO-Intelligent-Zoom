@@ -43,7 +43,7 @@ ADHD.config_about({name: "MWO Zoom", version: "4.3.0", author: "evilC", link: "<
 ADHD.config_limit_app("CryENGINE")
 
 ; GUI size
-ADHD.config_size(375,350)
+ADHD.config_size(450,350)
 
 ; Configure update notifications:
 ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
@@ -170,15 +170,15 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 pToken := Gdip_Startup()
 
 ; Add Calibration Popup (Debug window is 2, so window 3)
-Gui, 3:Add, Text, x5 y5 w300 h40, Use the buttons to select the HUD Zoom element. Select the smallest possible area that shows all the numbers. 
+Gui, 4:Add, Text, x5 y5 w300 h40, Use the buttons to select the HUD Zoom element. Select the smallest possible area that shows all the numbers. 
 
-Gui, 3:Add, Groupbox, x5 yp+45 w300 h40, Step Size
-;Gui, 3:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
-Gui, 3:Add, Radio, x10 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
-Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 10
-Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 5
-Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 2
-Gui, 3:Add, Radio, xp+65 yp gCalibStepRateChanged, 1
+Gui, 4:Add, Groupbox, x5 yp+45 w300 h40, Step Size
+;Gui, 4:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
+Gui, 4:Add, Radio, x10 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
+Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 10
+Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 5
+Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 2
+Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 1
 
 xpos := 60
 ypos := 115
@@ -187,26 +187,26 @@ xp2 := xpos + 45
 yp1 := ypos + 20
 yp2 := ypos + 40
 yp3 := ypos - 20
-Gui, 3:Add, Groupbox, x5 y%yp3% w148 h100, RESIZE
-Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
-Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
-Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
-Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSnapshotHeightDown, Height`n-
+Gui, 4:Add, Groupbox, x5 y%yp3% w148 h100, RESIZE
+Gui, 4:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
+Gui, 4:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
+Gui, 4:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
+Gui, 4:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSnapshotHeightDown, Height`n-
 
 xpos := 210
 xp1 := xpos - 45
 xp2 := xpos + 45
-Gui, 3:Add, Groupbox, x155 y%yp3% w150 h100, MOVE
-Gui, 3:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
-Gui, 3:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
-Gui, 3:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
-Gui, 3:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
+Gui, 4:Add, Groupbox, x155 y%yp3% w150 h100, MOVE
+Gui, 4:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
+Gui, 4:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
+Gui, 4:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
+Gui, 4:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
 
-;Gui, 3:Add, Progress, x5 yp+40 w300 h150 BackgroundRed disabled vSnapshotCalibBG
-;Gui, 3:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
-Gui, 3:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
-;Gui, 3:Add, Button, x5 yp+150 gCalibTest, Change Zoom
-Gui, 3:Add, Button, center x5 w300 yp+160 gDetectCoordinates, Proceed to the next step - Detect Coordinates
+;Gui, 4:Add, Progress, x5 yp+40 w300 h150 BackgroundRed disabled vSnapshotCalibBG
+;Gui, 4:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
+Gui, 4:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
+;Gui, 4:Add, Button, x5 yp+150 gCalibTest, Change Zoom
+Gui, 4:Add, Button, center x5 w300 yp+160 gDetectCoordinates, Proceed to the next step - Detect Coordinates
 
 ADHD.finish_startup()
 
@@ -290,7 +290,7 @@ CalibSnapshotPosRight:
 	return
 
 CalibStepRateChanged:
-	gui, 3:submit, nohide
+	gui, 4:submit, nohide
 	if (CalibStepRate == 1){
 		CalibStepRate := 20
 	} else if (CalibStepRate == 2){
@@ -424,27 +424,30 @@ calibration_mode(){
 	global calib_offset
 	global calib_size
 
-	limit_application := ADHD.get_limit_app()
+	global adhd_limit_application_on
 
-	if (!ADHD.get_limit_application_on()){
-		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
+	limit_app := ADHD.get_limit_app()
+
+	if (!ADHD.get_limit_app_on()){
+		;msgbox % adhd_limit_application_on "-" ADHD.get_limit_app_on()
+		;msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
 		return
 	}
 	StringCaseSense, On
-	if (limit_application != "CryENGINE"){
+	if (limit_app != "CryENGINE"){
 		msgbox The "Limit to Application" option in the Bindings tab must be set to "CryENGINE" (No Quotes, CaSe SenSITive).
 		StringCaseSense, Off
 		return
 	}
 	StringCaseSense, Off
 
-	if(!WinExist("ahk_class " limit_application)){
+	if(!WinExist("ahk_class " limit_app)){
 		msgbox Game not detected. Aborting.
 		return
 	}
-	WinActivate, ahk_class %limit_application%
+	WinActivate, ahk_class %limit_app%
 
-	WinWaitActive, ahk_class %limit_application%
+	WinWaitActive, ahk_class %limit_app%
 
 	tim := A_TickCount + 5000
 	Loop {
@@ -484,8 +487,8 @@ calibration_mode(){
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
 
-	Gui, 3:Show, x0 y0 w310 h380, Calibration Popup
-	Gui, 3:Submit, Nohide
+	Gui, 4:Show, x0 y0 w310 h380, Calibration Popup
+	Gui, 4:Submit, Nohide
 	set_always_on_top()
 	Gosub, CalibStepRateChanged
 
@@ -510,7 +513,7 @@ center_calib_snapshot(){
 	outx += 5
 	outy += 150
 
-	Guicontrol, 3:Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
+	Guicontrol, 4:Move, SnapshotCalib, x%outx% y%outy% w%outw% h%outh%
 
 	/*
 	if (outw * outh < 1000){
@@ -537,7 +540,7 @@ detect_coordinates(){
 	global pixel_detect_start
 	global pixel_detect_size
 
-	limit_application := ADHD.get_limit_app()
+	limit_app := ADHD.get_limit_app()
 
 	; Detect pixels
 	; Build cache of the 3 zooms
@@ -550,9 +553,9 @@ detect_coordinates(){
 		num_snapshots := 3
 	}
 
-	WinActivate, ahk_class %limit_application%
+	WinActivate, ahk_class %limit_app%
 
-	WinWaitActive, ahk_class %limit_application%
+	WinWaitActive, ahk_class %limit_app%
 
 	tim := A_TickCount + 5000
 	Loop {
@@ -1350,13 +1353,13 @@ set_always_on_top(){
 		Gui,+AlwaysOnTop
 		; Set debug window always on top also
 		Gui,2:+AlwaysOnTop
-		;Gui,3:+AlwaysOnTop
+		;Gui,4:+AlwaysOnTop
 	} else {
 		Gui,-AlwaysOnTop
 		Gui,2:-AlwaysOnTop
-		;Gui,3:-AlwaysOnTop
+		;Gui,4:-AlwaysOnTop
 	}
-	Gui,3:+AlwaysOnTop
+	Gui,4:+AlwaysOnTop
 }
 
 ; Calculates size and position of a box that covers all the coordinates
