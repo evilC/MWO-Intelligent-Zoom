@@ -40,7 +40,7 @@ SetKeyDelay, 0, 50
 ADHD.config_about({name: "MWO Zoom", version: "4.3.0", author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
-ADHD.config_default_app("CryENGINE")
+ADHD.config_limit_app("CryENGINE")
 
 ; GUI size
 ADHD.config_size(375,350)
@@ -421,30 +421,30 @@ calibration_mode(){
 	global pixel_detect_start
 	global AdvZoom
 	global AdvZoomKey
-	global adhd_limit_application_on
-	global adhd_limit_application
 	global calib_offset
 	global calib_size
 
-	if (!adhd_limit_application_on){
+	limit_application := ADHD.get_limit_app()
+
+	if (!ADHD.get_limit_application_on()){
 		msgbox The "Limit to Application" option in the Bindings tab must be enabled to Detect Coordinates.
 		return
 	}
 	StringCaseSense, On
-	if (adhd_limit_application != "CryENGINE"){
+	if (limit_application != "CryENGINE"){
 		msgbox The "Limit to Application" option in the Bindings tab must be set to "CryENGINE" (No Quotes, CaSe SenSITive).
 		StringCaseSense, Off
 		return
 	}
 	StringCaseSense, Off
 
-	if(!WinExist("ahk_class " adhd_limit_application)){
+	if(!WinExist("ahk_class " limit_application)){
 		msgbox Game not detected. Aborting.
 		return
 	}
-	WinActivate, ahk_class %adhd_limit_application%
+	WinActivate, ahk_class %limit_application%
 
-	WinWaitActive, ahk_class %adhd_limit_application%
+	WinWaitActive, ahk_class %limit_application%
 
 	tim := A_TickCount + 5000
 	Loop {
@@ -531,12 +531,13 @@ detect_coordinates(){
 	global default_colour
 	global AdvZoom
 	global AdvZoomKey
-	global adhd_limit_application
 	global calib_offset
 	global calib_size
 	global calib_list
 	global pixel_detect_start
 	global pixel_detect_size
+
+	limit_application := ADHD.get_limit_app()
 
 	; Detect pixels
 	; Build cache of the 3 zooms
@@ -549,9 +550,9 @@ detect_coordinates(){
 		num_snapshots := 3
 	}
 
-	WinActivate, ahk_class %adhd_limit_application%
+	WinActivate, ahk_class %limit_application%
 
-	WinWaitActive, ahk_class %adhd_limit_application%
+	WinWaitActive, ahk_class %limit_application%
 
 	tim := A_TickCount + 5000
 	Loop {
