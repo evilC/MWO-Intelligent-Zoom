@@ -53,14 +53,10 @@ ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
 ; uiname is what to refer to it as in the UI (ie Human readable, with spaces)
 ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn"})
 ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut"})
-ADHD.config_hotkey_add({uiname: "Calibrate Basic", subroutine: "CalibrateBasic"})
-adhd_hk_k_3_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
-ADHD.config_hotkey_add({uiname: "Calibrate 1.5x", subroutine: "Calibrate1_5x"})
-adhd_hk_k_4_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
-ADHD.config_hotkey_add({uiname: "Calibrate 3.0x", subroutine: "Calibrate3x"})
-adhd_hk_k_5_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
-ADHD.config_hotkey_add({uiname: "Calibrate 4.0x (Adv)", subroutine: "Calibrate4x"})
-adhd_hk_k_6_TT := "Will copy the colour from the Current to the Target box in Calibration Mode"
+ADHD.config_hotkey_add({uiname: "Calibrate Basic", subroutine: "CalibrateBasic", tooltip: "Will copy the colour from the Current to the Target box in Calibration Mode"})
+ADHD.config_hotkey_add({uiname: "Calibrate 1.5x", subroutine: "Calibrate1_5x", tooltip: "Will copy the colour from the Current to the Target box in Calibration Mode"})
+ADHD.config_hotkey_add({uiname: "Calibrate 3.0x", subroutine: "Calibrate3x", tooltip: "Will copy the colour from the Current to the Target box in Calibration Mode"})
+ADHD.config_hotkey_add({uiname: "Calibrate 4.0x (Adv)", subroutine: "Calibrate4x", tooltip: "Will copy the colour from the Current to the Target box in Calibration Mode"})
 
 ; Hook into ADHD events
 ; First parameter is name of event to hook into, second parameter is a function name to launch on that event
