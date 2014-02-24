@@ -7,6 +7,8 @@ Key:
 + : Added feature
 
 4.3.0
++ NEW Bindings tab
+! All your bindings will be lost, sorry!
 + New "SnapShot" based detection system.
   Instead of making 2-4 pixel checks (each taking ~30ms and maybe the screen changes between each),
   the new system takes one snapshot (~50ms) and then can do multiple checks quickly on a section of the same frame.
