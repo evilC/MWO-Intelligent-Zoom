@@ -27,7 +27,7 @@ zoom_tick_dir := 0		; last zoom direction
 zoom_waiting := 0		; whether a zoom is queued, and in which direction.
 current_zoom := 1		; the zoom level the code thinks it is currently in
 desired_zoom := 0 		; the zoom level we are trying to get to (0 = not zooming)
-calib_gui_id := ADHD.get_guis_used()+2
+calib_gui_id := ADHD.get_guis_used()+1
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
