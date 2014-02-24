@@ -27,6 +27,7 @@ zoom_tick_dir := 0		; last zoom direction
 zoom_waiting := 0		; whether a zoom is queued, and in which direction.
 current_zoom := 1		; the zoom level the code thinks it is currently in
 desired_zoom := 0 		; the zoom level we are trying to get to (0 = not zooming)
+calib_gui_id := ADHD.get_guis_used()+2
 
 ; ============================================================================================
 ; CONFIG SECTION - Configure ADHD
@@ -170,15 +171,14 @@ ADHD.gui_add("CheckBox", "PlayDebugSounds", "xp+100 yp", "Play Debug Sounds", 0)
 pToken := Gdip_Startup()
 
 ; Add Calibration Popup (Debug window is 2, so window 3)
-Gui, 4:Add, Text, x5 y5 w300 h40, Use the buttons to select the HUD Zoom element. Select the smallest possible area that shows all the numbers. 
+Gui, %calib_gui_id%:Add, Text, x5 y5 w300 h40, Use the buttons to select the HUD Zoom element. Select the smallest possible area that shows all the numbers. 
 
-Gui, 4:Add, Groupbox, x5 yp+45 w300 h40, Step Size
-;Gui, 4:Add, Text, center x5 yp+45 w300 h40, Step Size (px)
-Gui, 4:Add, Radio, x10 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
-Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 10
-Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 5
-Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 2
-Gui, 4:Add, Radio, xp+65 yp gCalibStepRateChanged, 1
+Gui, %calib_gui_id%:Add, Groupbox, x5 yp+45 w300 h40, Step Size
+Gui, %calib_gui_id%:Add, Radio, x10 yp+15 Checked gCalibStepRateChanged vCalibStepRate, 20
+Gui, %calib_gui_id%:Add, Radio, xp+65 yp gCalibStepRateChanged, 10
+Gui, %calib_gui_id%:Add, Radio, xp+65 yp gCalibStepRateChanged, 5
+Gui, %calib_gui_id%:Add, Radio, xp+65 yp gCalibStepRateChanged, 2
+Gui, %calib_gui_id%:Add, Radio, xp+65 yp gCalibStepRateChanged, 1
 
 xpos := 60
 ypos := 115
@@ -187,26 +187,26 @@ xp2 := xpos + 45
 yp1 := ypos + 20
 yp2 := ypos + 40
 yp3 := ypos - 20
-Gui, 4:Add, Groupbox, x5 y%yp3% w148 h100, RESIZE
-Gui, 4:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
-Gui, 4:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
-Gui, 4:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
-Gui, 4:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSnapshotHeightDown, Height`n-
+Gui, %calib_gui_id%:Add, Groupbox, x5 y%yp3% w148 h100, RESIZE
+Gui, %calib_gui_id%:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotHeightUp vCalibSnapshotHeightUp, Height`n+
+Gui, %calib_gui_id%:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotWidthDown vCalibSnapshotWidthDown, Width`n-
+Gui, %calib_gui_id%:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotWidthUp vCalibSnapshotWidthUp, Width`n+
+Gui, %calib_gui_id%:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotHeightDown vCalibSnapshotHeightDown, Height`n-
 
 xpos := 210
 xp1 := xpos - 45
 xp2 := xpos + 45
-Gui, 4:Add, Groupbox, x155 y%yp3% w150 h100, MOVE
-Gui, 4:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
-Gui, 4:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
-Gui, 4:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
-Gui, 4:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
+Gui, %calib_gui_id%:Add, Groupbox, x155 y%yp3% w150 h100, MOVE
+Gui, %calib_gui_id%:Add, Button, center w25 x%xpos% y%ypos% gCalibSnapshotPosUp vCalibSnapshotPosUp, Move`nUp
+Gui, %calib_gui_id%:Add, Button, center w25 x%xp1% y%yp1% gCalibSnapshotPosLeft vCalibSnapshotPosLeft, Move`nLeft
+Gui, %calib_gui_id%:Add, Button, center w25 x%xp2% y%yp1% gCalibSnapshotPosRight vCalibSnapshotPosRight, Move`nRight
+Gui, %calib_gui_id%:Add, Button, center w25 x%xpos% y%yp2% gCalibSnapshotPosDown vCalibSnapshotPosDown, Move`nDown
 
-;Gui, 4:Add, Progress, x5 yp+40 w300 h150 BackgroundRed disabled vSnapshotCalibBG
-;Gui, 4:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
-Gui, 4:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
-;Gui, 4:Add, Button, x5 yp+150 gCalibTest, Change Zoom
-Gui, 4:Add, Button, center x5 w300 yp+160 gDetectCoordinates, Proceed to the next step - Detect Coordinates
+;Gui, %calib_gui_id%:Add, Progress, x5 yp+40 w300 h150 BackgroundRed disabled vSnapshotCalibBG
+;Gui, %calib_gui_id%:Add, Text, 0xE xp yp w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
+Gui, %calib_gui_id%:Add, Text, 0xE x5 yp+40 w300 h150 hwndhSnapshotCalib vSnapshotCalib         ; SS_Bitmap    = 0xE
+;Gui, %calib_gui_id%:Add, Button, x5 yp+150 gCalibTest, Change Zoom
+Gui, %calib_gui_id%:Add, Button, center x5 w300 yp+160 gDetectCoordinates, Proceed to the next step - Detect Coordinates
 
 ADHD.finish_startup()
 
@@ -290,7 +290,7 @@ CalibSnapshotPosRight:
 	return
 
 CalibStepRateChanged:
-	gui, 4:submit, nohide
+	Gui, %calib_gui_id%:submit, nohide
 	if (CalibStepRate == 1){
 		CalibStepRate := 20
 	} else if (CalibStepRate == 2){
@@ -423,6 +423,7 @@ calibration_mode(){
 	global AdvZoomKey
 	global calib_offset
 	global calib_size
+	global calib_gui_id
 
 	global adhd_limit_application_on
 
@@ -487,8 +488,8 @@ calibration_mode(){
 	snapshot_calib := take_snapshot_custom(calib_offset,calib_size)
 	show_snapshot_calib(snapshot_calib)
 
-	Gui, 4:Show, x0 y0 w310 h380, Calibration Popup
-	Gui, 4:Submit, Nohide
+	Gui, %calib_gui_id%:Show, x0 y0 w310 h380, Calibration Popup
+	Gui, %calib_gui_id%:Submit, Nohide
 	set_always_on_top()
 	Gosub, CalibStepRateChanged
 
