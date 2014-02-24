@@ -6,6 +6,10 @@ Key:
 = : Change / Fix
 + : Added feature
 
+4.3.1 24th Feb 2014
+= Oops, had left a debug message in ADHD
+  Hotfix
+
 4.3.0 24th Feb 2014
 + NEW Bindings tab
 ! All your bindings will be lost, sorry!
