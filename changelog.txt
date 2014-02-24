@@ -6,7 +6,7 @@ Key:
 = : Change / Fix
 + : Added feature
 
-4.3.0
+4.3.0 24th Feb 2014
 + NEW Bindings tab
 ! All your bindings will be lost, sorry!
 + New "SnapShot" based detection system.
