@@ -6,6 +6,9 @@ Key:
 = : Change / Fix
 + : Added feature
 
+4.3.2 25th Feb 2014
+= Zoom is back to it's previous size
+
 4.3.1 24th Feb 2014
 = Oops, had left a debug message in ADHD
   Hotfix
