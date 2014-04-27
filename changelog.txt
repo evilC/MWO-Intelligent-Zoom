@@ -6,6 +6,11 @@ Key:
 = : Change / Fix
 + : Added feature
 
+5.0 27th April 2014
+PGI adds zoom in/out controls, but botches the job.
+= Complete rewrite - Pixel detection removed.
+= Script is now authoritive - IT tells MWO what zoom to go to, not tries to see what zoom MWO is in.
+
 4.3.2 25th Feb 2014
 = Zoom is back to it's previous size
 
