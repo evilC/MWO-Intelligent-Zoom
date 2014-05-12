@@ -23,7 +23,7 @@ SetKeyDelay, 0, 50
 
 ; Stuff for the About box
 
-ADHD.config_about({name: "MWO Zoom", version: "5.0", author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
+ADHD.config_about({name: "MWO Zoom", version: "5.1", author: "evilC", link: "<a href=""http://mwomercs.com/forums/topic/133370-"">Homepage</a>"})
 ; The default application to limit hotkeys to.
 ; Starts disabled by default, so no danger setting to whatever you want
 ADHD.config_limit_app("CryENGINE")
@@ -37,8 +37,9 @@ ADHD.config_updates("http://evilc.com/files/ahk/mwo/mwozoom.au.txt")
 ; Defines your hotkeys 
 ; subroutine is the label (subroutine name - like MySub: ) to be called on press of bound key
 ; uiname is what to refer to it as in the UI (ie Human readable, with spaces)
-ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn"})
-ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut"})
+ADHD.config_hotkey_add({uiname: "Zoom In", subroutine: "ZoomIn", tooltip: "The key you wish to use to zoom in"})
+ADHD.config_hotkey_add({uiname: "Zoom Out", subroutine: "ZoomOut", tooltip: "The key you wish to use to zoom out"})
+ADHD.config_hotkey_add({uiname: "Toggle Adv Zoom", subroutine: "ToggleAdv", tooltip: "Toggles state of Advanced Zoom checkbox"})
 
 ; Hook into ADHD events
 ; First parameter is name of event to hook into, second parameter is a function name to launch on that event
@@ -109,7 +110,25 @@ ZoomOut:
 	DoZoom(-1)
 	return
 
+ToggleAdv:
+	ToggleAdv()
+	return
 
+ToggleAdv(){
+	global AdvZoom
+	global ADHD
+
+	tmp := !AdvZoom
+	if (tmp){
+		beep := 700
+	} else {
+		beep := 300
+	}
+	GuiControl,,AdvZoom, %tmp%
+	; A little hacky, but what the hell
+	Gosub, adhd_option_changed
+	soundbeep %beep%, 200
+}
 
 DoZoom(dir){
 	global zoom

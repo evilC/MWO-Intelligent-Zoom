@@ -6,6 +6,10 @@ Key:
 = : Change / Fix
 + : Added feature
 
+5.1 12th May 2014
++ Added "Toggle Advanced Zoom" binding that lets you toggle the state of the checkbox.
+So now, if you change mech or module loadout, you can enable or disable advanced zoom without tabbing out.
+
 5.0 27th April 2014
 PGI adds zoom in/out controls, but botches the job.
 = Complete rewrite - Pixel detection removed.
